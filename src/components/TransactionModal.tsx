@@ -48,6 +48,18 @@ export default function TransactionModal({
     }
   }, [isOpen, initialType]);
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const loadWallets = async () => {
     const dbWallets = await getWallets();
     setWallets(dbWallets);

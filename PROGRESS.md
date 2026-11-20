@@ -1,7 +1,7 @@
-# PROGRESS REDESIGN TAMPILAN - DUIT TRACK
+# PROGRESS REDESIGN TAMPILAN - Duittrack
 
 ## 1. Ringkasan Proyek
-- **Tujuan Aplikasi**: Aplikasi pencatat dan manajemen keuangan pribadi modern ("Duit Track" / "Daptrack"), dilengkapi fitur gamifikasi streak harian, target impian/tabungan (Goals), multi-wallet/dompet, analisis & statistik pengeluaran, perbandingan keuangan, serta pengingat harian PWA.
+- **Tujuan Aplikasi**: Aplikasi pencatat dan manajemen keuangan pribadi modern ("Duittrack"), dilengkapi fitur gamifikasi streak harian, target impian/tabungan (Goals), multi-wallet/dompet, analisis & statistik pengeluaran, perbandingan keuangan, serta pengingat harian PWA.
 - **Teknologi**: React 19, TypeScript, Vite 6, Tailwind CSS v4 (`@tailwindcss/vite`), Lucide React, IndexedDB untuk penyimpanan lokal offline-first.
 - **Struktur Folder Penting**:
   - `src/App.tsx`: Root shell, navigasi bawah (bottom navigation bar), Onboarding modal, global Floating Action Button (FAB), Delete confirmation dialog, Service Worker & alarm pengingat.
@@ -126,3 +126,113 @@ File terpusat: `src/index.css` dan `index.html`.
 
 ## 7. Status Penyelesaian
 Semua tahapan pekerjaan redesign tampilan telah **SELESAI (100%)** dan diverifikasi.
+
+
+---
+
+## 8. Tugas Tambahan: Rename & Fix FAB
+
+### Checklist Tugas:
+- [x] **Tugas 1: Ubah Nama "Daptrack" Menjadi "Duittrack" (Tampilan Saja)**
+  - [x] Pencarian seluruh variasi nama (`daptrack`, `dap track`, `dap-track`, `dap_track`, `DapTrack`, `DAPTRACK`) di seluruh proyek.
+  - [x] Teks tampilan diubah menjadi "Duittrack" (gaya huruf D kapital, sisanya kecil):
+    - `index.html`: `<title>Duittrack - Kelola Keuangan Cerdas</title>`
+    - `public/manifest.json`: `"name": "Duittrack - Finansial & Streak"`, `"short_name": "Duittrack"`
+    - `metadata.json`: `"name": "Duittrack"`
+    - `src/App.tsx`: Onboarding brand logo header, modal PWA card judul, pesan notifikasi PWA aktif, dan pesan selamat datang kembali.
+    - `src/components/Profile.tsx`: Notifikasi alarm harian, nama file cadangan JSON (`Backup_Keuangan_Duittrack_*.json`), dan nama file unduhan Excel (`Laporan_Keuangan_Duittrack_*.xlsx`).
+    - `.env.example` & `README.md`: Judul dan dokumentasi panduan aplikasi.
+  - [x] Identifier teknis dipertahankan aman: Database name IndexedDB (`neobrutalist_finance_db`), nama tabel/object store, keys localStorage (`finance_*`), package.json (`react-example`).
+  - [x] Verifikasi logo gambar:
+    - `public/assets/logo.png`: Berisi foto avatar anime tanpa teks nama aplikasi.
+    - `src/assets/images/pwa_icon_1782908191624.jpg`: Berisi ikon grafis koin api (flame coin) tanpa teks.
+    - *Catatan*: Tidak ada teks "Daptrack" di dalam file gambar.
+  - [x] Pencarian ulang pasca-pengubahan: 0 variasi "daptrack" tersisa pada seluruh file source code.
+
+- [x] **Tugas 2: Perbaiki Bug Tombol "+" (FAB) di Kanan Bawah**
+  - [x] Investigasi dan identifikasi akar masalah (Root Cause Analysis).
+  - [x] Perbaikan kode:
+    - Menghapus timer inaktivitas (`setInterval` 10 detik) dan state `isFabCollapsed` di `src/App.tsx`.
+    - Menghapus kelas transform CSS `rotate-45` pada ikon `<Plus />` dan pergeseran horizontal `translate-x-5 opacity-80`.
+    - Ikon FAB selalu murni `<Plus size={24} strokeWidth={2.5} />`, tidak pernah berubah menjadi "X" dalam kondisi apa pun.
+    - Menyediakan posisi terpusat yang konsisten melalui kelas CSS `.fab-fixed-container` di `src/index.css` dengan `position: fixed`, `bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px))`, dan `right: max(1rem, calc(50% - 14rem + 1rem))` (terkunci rapi di kanan bawah layar mobile dan sejajar sisi kanan container 448px pada tablet/desktop).
+    - Menambahkan listener tombol keyboard `Escape` pada `src/components/TransactionModal.tsx` agar form dapat ditutup dengan tombol Esc.
+  - [x] Pengujian komprehensif seluruh skenario via automated headless browser (Edge CDP):
+    - [x] Klik "+" langsung membuka modal transaksi keuangan.
+    - [x] Tetap idle/inaktif > 10 detik: ikon tetap "+" dan posisi tidak bergeser.
+    - [x] Simpan catatan berhasil: modal tertutup dan tombol FAB tetap "+".
+    - [x] Simpan dengan nominal tidak valid (error validasi): alert tertangani dan FAB tetap "+".
+    - [x] Batal / tutup form via tombol Esc, tombol "✕" dalam modal, dan klik backdrop luar: FAB tetap "+".
+    - [x] Tambah beberapa transaksi berturut-turut (3 ronde): FAB tetap "+".
+    - [x] Navigasi antar halaman (Target, Aktivitas, Analisis, Profil, Beranda): FAB tetap "+" dan posisi stabil.
+    - [x] Scroll panjang: FAB tetap fixed di kanan bawah, tidak terpengaruh scroll.
+    - [x] Responsive layout check (360px, 768px, 1440px): FAB tetap berada di dalam viewport dan posisinya terhitung presisi.
+
+### File yang Diubah:
+1. `src/App.tsx`:
+   - Dihapus: state `isFabCollapsed`, `lastActivityTime`, dan timer `useEffect` inaktivitas 10 detik.
+   - Diperbarui: `handleOpenAddModal` dan `handleFabClick` langsung membuka form transaksi.
+   - Diperbarui: JSX FAB menggunakan `.fab-fixed-container`, `type="button"`, dan ikon static `<Plus size={24} strokeWidth={2.5} />`.
+2. `src/index.css`:
+   - Ditambahkan: rule posisi terpusat `.fab-fixed-container` dengan dukungan `env(safe-area-inset-bottom, 0px)` dan responsive container constraint.
+3. `src/components/TransactionModal.tsx`:
+   - Ditambahkan: event listener tombol `Escape` untuk menutup modal.
+4. `PROGRESS.md`:
+   - Dokumentasi lengkap pelaksanaan dan hasil pengujian Tugas Tambahan.
+
+
+---
+
+## 9. Tugas Tambahan: Rapikan Dashboard (hapus estimasi & toggle saldo)
+
+### Checklist Tugas:
+- [x] **Tugas 1: Hapus Keterangan "Estimasi Tanggal Bokek"**
+  - [x] Pencarian elemen tampilan estimasi di dashboard (`src/components/Dashboard.tsx`).
+  - [x] Markup & styling keterangan "Estimasi Tanggal Bokek", health bar indikator, dan teks hari tersisa dihapus seluruhnya dari kartu saldo (`#balance-card`).
+  - [x] Spacing dan layout kartu saldo dirapikan menjadi `flex justify-between items-center` tanpa menyisakan ruang kosong atau garis pemisah (`border-t`) yang tertinggal.
+  - [x] Fungsi perhitungan (`predictBrokeDate`) dan variabel (`brokePrediction`, `getHealthColor`) di belakang layar tetap dipertahankan aman di kode agar tidak memicu error JS (dicatat sebagai kandidat pembersihan refactor di masa depan).
+  - [x] Verifikasi halaman lain: Teks "Belum ada pengeluaran di periode ini." pada `src/components/Statistics.tsx` ditemukan dan dipertahankan (karena berada di halaman Analisis/Statistik, bukan dashboard).
+
+- [x] **Tugas 2: Ganti Tanda Panah Naik/Turun Menjadi Ikon Mata (Sembunyikan Saldo)**
+  - [x] Identifikasi elemen panah di dashboard:
+    - Ikon panah dekoratif `TrendingUp` di pojok kanan atas kartu saldo utama (`#balance-card`) dihapus dan digantikan oleh tombol toggle interaktif ikon mata (`Eye` / `EyeOff`).
+    - Keputusan panah lain: Ikon `ArrowUpRight` (Belanja) dan `ArrowDownLeft` (Pemasukan) pada tombol Quick Actions dipertahankan penuh karena memiliki fungsi pembeda arah mutasi transaksi.
+  - [x] Perilaku ikon mata:
+    - Default: Saldo tampil dengan ikon mata biasa (`Eye`).
+    - Saat ditekan: Saldo disamarkan menjadi `Rp ••••••`, ikon berubah menjadi mata dicoret (`EyeOff`).
+    - Saat ditekan kembali: Saldo tampil kembali dengan format Rupiah asli.
+  - [x] Elemen yang ikut disamarkan saat mode sembunyi aktif:
+    1. Sisa Saldo Utama di kartu hero (`#balance-card h1`).
+    2. Saldo masing-masing akun dompet pada Wallet Carousel (`Dompet & Rekening`).
+    3. Total Pemasukan Bulanan pada kartu ringkasan (`Masuk`).
+    4. Total Pengeluaran Bulanan pada kartu ringkasan (`Keluar`).
+    5. Total Tabungan Bulanan pada kartu ringkasan (`Nabung`).
+    *(Daftar riwayat transaksi di bawahnya sengaja tidak disamarkan sesuai spesifikasi).*
+  - [x] Penyimpanan preferensi:
+    - Disimpan di `localStorage` menggunakan key baru `duittrack_hide_balance` bertipe boolean string (`"true"` / `"false"`).
+    - Seluruh akses dibungkus dengan blok `try / catch` yang aman.
+  - [x] Aksesibilitas & Desain:
+    - Elemen tombol memakai `<button type="button">` dengan atribut `aria-label` dinamis ("Sembunyikan saldo" / "Tampilkan saldo"), `aria-pressed`, dan focus ring `focus:ring-2 focus:ring-teal-300/50`.
+    - Mendukung navigasi keyboard penuh (fokus via `Tab`, aktivasi via tombol `Enter` dan `Space`).
+    - Ukuran ikon 21px dengan area sentuh minimal 44x44px (`w-11 h-11`).
+    - Tinggi kartu saldo stabil persis 97px tanpa pergeseran atau lonjakan layout (0 shift) di seluruh resolusi (360px, 768px, 1024px, 1440px).
+
+### Pengujian Wajib (Semua Lolos 100%):
+1. **Estimasi Bokek Hilang**: Bersih tanpa bokek/estimasi baik sebelum maupun sesudah ada transaksi pengeluaran.
+2. **Panah Hilang Diganti Ikon Mata**: Ikon `TrendingUp` digantikan tombol mata interaktif dengan styling solid modern deep teal.
+3. **Toggle Saldo**: Klik mata menyamarkan saldo utama, dompet, dan ringkasan; klik ulang memunculkan saldo.
+4. **Persistensi LocalStorage**: Status tersembunyi tetap diingat sempurna setelah reload halaman (`duittrack_hide_balance: true`).
+5. **Reaktivitas Data**: Penambahan transaksi saat saldo tersembunyi tetap menjaga status penyamaran, dan saat dibuka kembali menampilkan nominal baru yang telah terbarui.
+6. **Stabilitas Responsif**: Tinggi kartu stabil 97px tanpa pergeseran di 360px, 768px, 1024px, dan 1440px.
+7. **Aksesibilitas Keyboard**: Tombol dapat difokuskan dan di-toggle lancar menggunakan `Space` dan `Enter`.
+8. **Integritas Fitur Lain**: Streak tracker, quick actions, monthly metrics, heatmap 35 hari, goal carousel, dan riwayat transaksi berjalan normal tanpa gangguan.
+
+### File yang Diubah:
+1. `src/components/Dashboard.tsx`:
+   - Penambahan import ikon `Eye`, `EyeOff` dari `lucide-react`.
+   - Penambahan state `hideBalance` dan fungsi `toggleHideBalance` dengan persistensi `duittrack_hide_balance` di `localStorage`.
+   - Penggantian elemen `TrendingUp` dengan `<button type="button">` ikon mata lengkap dengan atribut aksesibilitas dan handler keyboard `Enter` & `Space`.
+   - Penghapusan markup dan styling "Estimasi Tanggal Bokek", health bar indikator, dan teks hari tersisa.
+   - Penyamaran nominal pada kartu saldo utama, wallet carousel, dan ringkasan bulanan saat `hideBalance` bernilai `true`.
+2. `PROGRESS.md`:
+   - Dokumentasi lengkap hasil pengujian dan checklist tugas.

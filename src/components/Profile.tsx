@@ -156,14 +156,14 @@ export default function Profile({
         
         if ('serviceWorker' in navigator) {
           const registration = await navigator.serviceWorker.ready;
-          registration.showNotification('📲 Alarm Duit Track Aktif!', {
+          registration.showNotification('📲 Alarm Duittrack Aktif!', {
             body: `Pengingat harian kamu telah berhasil dijadwalkan pada jam ${reminderTime}!`,
             icon: '/assets/logo.png',
             badge: '/assets/logo.png',
             vibrate: [200, 100, 200]
           } as any);
         } else {
-          new Notification('📲 Alarm Duit Track Aktif!', {
+          new Notification('📲 Alarm Duittrack Aktif!', {
             body: `Pengingat harian kamu telah berhasil dijadwalkan pada jam ${reminderTime}!`,
             icon: '/assets/logo.png'
           });
@@ -207,7 +207,7 @@ export default function Profile({
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Backup_Keuangan_DuitTrack_${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `Backup_Keuangan_Duittrack_${new Date().toISOString().split('T')[0]}.json`;
       link.click();
     } catch (err) {
       alert('Gagal membuat file cadangan: ' + err);
@@ -322,7 +322,7 @@ export default function Profile({
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `Laporan_Keuangan_DuitTrack_${new Date().toISOString().split('T')[0]}.xlsx`);
+      link.setAttribute('download', `Laporan_Keuangan_Duittrack_${new Date().toISOString().split('T')[0]}.xlsx`);
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {

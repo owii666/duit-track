@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daptrack-cache-v1';
+const CACHE_NAME = 'duittrack-cache-v1';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -26,7 +26,7 @@ self.addEventListener('message', (event) => {
       icon: event.data.icon || '/assets/logo.png',
       badge: event.data.icon || '/assets/logo.png',
       vibrate: [200, 100, 200],
-      tag: event.data.tag || 'daptrack-reminder',
+      tag: event.data.tag || 'duittrack-reminder',
       renotify: true,
       data: { url: event.data.url || '/' }
     });

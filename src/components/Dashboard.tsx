@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Transaction, StreakDay, AppSettings, Goal, Wallet } from '../types';
 import { getWallets } from '../db/indexedDB';
 import { formatRupiah, getMonthlySummary, calculateOverallBalance, predictBrokeDate, getHeatmapData, getTodayLocalDateStr, parseLocalDate, calculateWalletBalances } from '../utils/financeHelpers';
-import { Flame, Snowflake, Sparkles, TrendingUp, TrendingDown, Target, Trash2, ChevronRight, ChevronLeft, Calendar, AlertTriangle, CheckCircle, User, ShoppingBag, Coins, Bookmark, Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, PiggyBank } from 'lucide-react';
+import { Flame, Snowflake, Sparkles, TrendingUp, TrendingDown, Target, Trash2, ChevronRight, ChevronLeft, Calendar, AlertTriangle, CheckCircle, User, ShoppingBag, Coins, Bookmark, Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, PiggyBank, Eye, EyeOff } from 'lucide-react';
 import CategoryIcon from './CategoryIcon';
 import gsap from 'gsap';
 
@@ -54,6 +54,28 @@ export default function Dashboard({
 
   const [userName, setUserName] = useState(() => localStorage.getItem('finance_user_name') || 'Budi');
   const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('finance_profile_photo') || '');
+
+  // Balance visibility toggle state (persisted in localStorage)
+  const [hideBalance, setHideBalance] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('duittrack_hide_balance') === 'true';
+    } catch (e) {
+      console.error('Failed to read hideBalance from localStorage', e);
+      return false;
+    }
+  });
+
+  const toggleHideBalance = useCallback(() => {
+    setHideBalance(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('duittrack_hide_balance', String(next));
+      } catch (e) {
+        console.error('Failed to save hideBalance to localStorage', e);
+      }
+      return next;
+    });
+  }, []);
 
   // GSAP Entrance Animations
   useEffect(() => {
@@ -222,47 +244,33 @@ export default function Dashboard({
       </div>
 
       {/* 2. Kartu Saldo Utama (Hero Card - Premium Solid Deep Teal) */}
-      <div id="balance-card" className="bg-[#1A434E] text-white p-5 rounded-2xl shadow-md flex flex-col justify-between relative overflow-hidden">
-        <div className="flex justify-between items-start">
-          <div>
-            <span className="text-[11px] font-medium text-teal-100/80 uppercase tracking-wider block">Sisa Saldo Tersedia</span>
-            <h1 className="text-3xl font-extrabold font-mono tracking-tight mt-1 text-white">
-              {formatRupiah(overallBalance)}
-            </h1>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 border border-white/15">
-            <TrendingUp className="text-teal-200" size={20} />
-          </div>
+      <div id="balance-card" className="bg-[#1A434E] text-white p-5 rounded-2xl shadow-md flex justify-between items-center relative overflow-hidden">
+        <div>
+          <span className="text-[11px] font-medium text-teal-100/80 uppercase tracking-wider block">Sisa Saldo Tersedia</span>
+          <h1 className="text-3xl font-extrabold font-mono tracking-tight mt-1 text-white">
+            {hideBalance ? 'Rp ••••••' : formatRupiah(overallBalance)}
+          </h1>
         </div>
-
-        {/* Health bar indicator */}
-        <div className="mt-5 pt-3 border-t border-white/15 space-y-2">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-teal-100/90 font-medium">
-              Estimasi Tanggal Bokek:
-            </span>
-            <span className={`px-2 py-0.5 rounded-md font-mono text-xs font-semibold ${
-              brokePrediction.status === 'danger' ? 'bg-[#C0504D] text-white' : 
-              brokePrediction.status === 'warning' ? 'bg-[#C98A2B] text-white' : 'bg-[#2E7D5B] text-white'
-            }`}>
-              {brokePrediction.dateStr}
-            </span>
-          </div>
-
-          <div className="w-full h-2.5 bg-black/25 rounded-full overflow-hidden">
-            <div 
-              className={`h-full ${getHealthColor()} transition-all duration-500 rounded-full`}
-              style={{ 
-                width: brokePrediction.daysRemaining === Infinity ? '100%' : `${Math.min(Math.max((brokePrediction.daysRemaining / 30) * 100, 8), 100)}%`
-              }}
-            />
-          </div>
-          {brokePrediction.daysRemaining !== Infinity && (
-            <p className="text-[10px] font-mono text-teal-200/80 text-right">
-              {brokePrediction.daysRemaining <= 0 ? 'Saldo diprediksi habis hari ini!' : `Bertahan ± ${brokePrediction.daysRemaining} hari lagi`}
-            </p>
+        <button
+          type="button"
+          onClick={toggleHideBalance}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleHideBalance();
+            }
+          }}
+          aria-label={hideBalance ? 'Tampilkan saldo' : 'Sembunyikan saldo'}
+          aria-pressed={hideBalance}
+          title={hideBalance ? 'Tampilkan saldo' : 'Sembunyikan saldo'}
+          className="w-11 h-11 rounded-xl bg-white/10 hover:bg-white/15 active:bg-white/20 text-teal-200 hover:text-white flex items-center justify-center shrink-0 border border-white/15 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-300/50"
+        >
+          {hideBalance ? (
+            <EyeOff size={21} strokeWidth={2} aria-hidden="true" />
+          ) : (
+            <Eye size={21} strokeWidth={2} aria-hidden="true" />
           )}
-        </div>
+        </button>
       </div>
 
       {/* 2.5 Kartu Daftar Dompet (Wallet Carousel) */}
@@ -282,7 +290,7 @@ export default function Dashboard({
                   <span className="text-xs font-bold text-[var(--color-text-primary)] truncate">{w.name}</span>
                 </div>
                 <span className="text-sm font-bold font-mono text-[var(--color-text-primary)] mt-0.5">
-                  {formatRupiah(walletBalances[w.id] || 0)}
+                  {hideBalance ? 'Rp ••••••' : formatRupiah(walletBalances[w.id] || 0)}
                 </span>
               </div>
             ))}
@@ -539,7 +547,7 @@ export default function Dashboard({
             <span>Masuk</span>
           </div>
           <span className="text-xs font-bold font-mono text-[var(--color-income)] mt-1 truncate">
-            {formatRupiah(income)}
+            {hideBalance ? 'Rp ••••••' : formatRupiah(income)}
           </span>
         </div>
 
@@ -550,7 +558,7 @@ export default function Dashboard({
             <span>Keluar</span>
           </div>
           <span className="text-xs font-bold font-mono text-[var(--color-expense)] mt-1 truncate">
-            {formatRupiah(expense)}
+            {hideBalance ? 'Rp ••••••' : formatRupiah(expense)}
           </span>
         </div>
 
@@ -561,7 +569,7 @@ export default function Dashboard({
             <span>Nabung</span>
           </div>
           <span className="text-xs font-bold font-mono text-[var(--color-secondary)] mt-1 truncate">
-            {formatRupiah(saving)}
+            {hideBalance ? 'Rp ••••••' : formatRupiah(saving)}
           </span>
         </div>
       </div>

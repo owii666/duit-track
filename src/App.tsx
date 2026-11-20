@@ -40,10 +40,6 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [addModalType, setAddModalType] = useState<'income' | 'expense' | 'saving' | 'transfer'>('expense');
 
-  // Interactive Floating Action Button state
-  const [isFabCollapsed, setIsFabCollapsed] = useState(false);
-  const [lastActivityTime, setLastActivityTime] = useState(Date.now());
-
   // Delete Confirmation Modal state
   const [txToDelete, setTxToDelete] = useState<number | null>(null);
 
@@ -76,8 +72,8 @@ export default function App() {
           if (permission === 'granted') {
             // Send instant neat welcome greeting to verify notifications work perfectly
             triggerLocalReminder(
-              '📲 Daptrack Aktif di HP-mu!',
-              'Daptrack siap mengirimkan pengingat harian otomatis agar kamu makin disiplin mengelola uang harian!'
+              '📲 Duittrack Aktif di HP-mu!',
+              'Duittrack siap mengirimkan pengingat harian otomatis agar kamu makin disiplin mengelola uang harian!'
             );
           }
         } catch (err) {
@@ -90,7 +86,7 @@ export default function App() {
         if (lastWelcomeDate !== todayDateStr) {
           localStorage.setItem('finance_last_welcome_date', todayDateStr);
           triggerLocalReminder(
-            '🔥 Selamat Datang Kembali di Daptrack!',
+            '🔥 Selamat Datang Kembali di Duittrack!',
             'Mari catat keuangan harianmu hari ini untuk menjaga rekor streak-mu tetap berkobar!'
           );
         }
@@ -139,7 +135,7 @@ export default function App() {
             icon: '/assets/logo.png',
             badge: '/assets/logo.png',
             vibrate: [200, 100, 200],
-            tag: 'daptrack-reminder-alarm',
+            tag: 'duittrack-reminder-alarm',
             renotify: true,
             data: { url: '/' }
           } as any);
@@ -181,18 +177,6 @@ export default function App() {
     }
     loadDatabaseValues();
   }, []);
-
-  // Monitor FAB inactivity
-  useEffect(() => {
-    const checkTimer = setInterval(() => {
-      const elapsed = Date.now() - lastActivityTime;
-      if (elapsed >= 10000 && !isFabCollapsed) {
-        setIsFabCollapsed(true);
-      }
-    }, 1000);
-
-    return () => clearInterval(checkTimer);
-  }, [lastActivityTime, isFabCollapsed]);
 
   const loadDatabaseValues = async () => {
     try {
@@ -288,19 +272,11 @@ export default function App() {
   const handleOpenAddModal = (type: 'income' | 'expense' | 'saving' | 'transfer') => {
     setAddModalType(type);
     setIsAddModalOpen(true);
-    setLastActivityTime(Date.now());
-    setIsFabCollapsed(false);
   };
 
   const handleFabClick = () => {
-    if (isFabCollapsed) {
-      setIsFabCollapsed(false);
-      setLastActivityTime(Date.now());
-    } else {
-      setAddModalType('expense');
-      setIsAddModalOpen(true);
-      setLastActivityTime(Date.now());
-    }
+    setAddModalType('expense');
+    setIsAddModalOpen(true);
   };
 
   // Render onboarding screen
@@ -314,7 +290,7 @@ export default function App() {
               <div className="w-8 h-8 rounded-lg bg-[var(--color-primary-light)] flex items-center justify-center text-[var(--color-primary)] font-bold text-sm">
                 DT
               </div>
-              <span className="text-xs font-semibold tracking-wide text-[var(--color-text-secondary)]">Duit Track</span>
+              <span className="text-xs font-semibold tracking-wide text-[var(--color-text-secondary)]">Duittrack</span>
             </div>
             <div className="flex items-center gap-1.5">
               {[1, 2, 3].map((step) => (
@@ -562,7 +538,7 @@ export default function App() {
                 📲
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[var(--color-text-primary)]">Pasang Duit Track</h4>
+                <h4 className="text-xs font-bold text-[var(--color-text-primary)]">Pasang Duittrack</h4>
                 <p className="text-[11px] text-[var(--color-text-secondary)] leading-tight mt-0.5">Akses instan dari layar utama HP atau komputermu.</p>
               </div>
             </div>
@@ -709,26 +685,15 @@ export default function App() {
       </nav>
 
       {/* FLOATING ACTION BUTTON */}
-      <div 
-        className={`fixed bottom-22 right-4 z-40 transition-all duration-300 transform ${
-          isFabCollapsed ? 'translate-x-5 opacity-80' : 'translate-x-0 opacity-100'
-        }`}
-        onMouseEnter={() => {
-          setIsFabCollapsed(false);
-          setLastActivityTime(Date.now());
-        }}
-        onTouchStart={() => {
-          setIsFabCollapsed(false);
-          setLastActivityTime(Date.now());
-        }}
-      >
+      <div className="fab-fixed-container">
         <button
+          type="button"
           onClick={handleFabClick}
-          className="w-13 h-13 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 hover:scale-105 transition-all cursor-pointer"
+          className="w-13 h-13 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-transform cursor-pointer"
           title="Tambah Transaksi"
           aria-label="Tambah Transaksi"
         >
-          <Plus size={24} strokeWidth={2.5} className={`transition-transform duration-300 ${isFabCollapsed ? 'rotate-45' : ''}`} />
+          <Plus size={24} strokeWidth={2.5} />
         </button>
       </div>
 

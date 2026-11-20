@@ -1,6 +1,6 @@
-# Duit Track - Aplikasi Manajemen Keuangan Pribadi (PWA)
+# Duittrack - Aplikasi Manajemen Keuangan Pribadi (PWA)
 
-**Duit Track** adalah aplikasi web pencatat dan pengelola keuangan pribadi modern dengan antarmuka bersih (*clean e-wallet UI*), sistem gamifikasi disiplin harian (*daily streak*), pelacak target impian (*savings goals*), budgeting bulanan, serta analisis arus kas interaktif.
+**Duittrack** adalah aplikasi web pencatat dan pengelola keuangan pribadi modern dengan antarmuka bersih (*clean e-wallet UI*), sistem gamifikasi disiplin harian (*daily streak*), pelacak target impian (*savings goals*), budgeting bulanan, serta analisis arus kas interaktif.
 
 Aplikasi ini dibangun dengan arsitektur **Client-Side Offline-First**: seluruh data keuangan tersimpan aman secara lokal di perangkat Anda menggunakan IndexedDB bawaan browser, tanpa memerlukan server database eksternal dan dapat digunakan tanpa koneksi internet.
 

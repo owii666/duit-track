@@ -314,3 +314,12 @@ body {
 .animate-flame {
   animation: pulse-flame 2s infinite ease-in-out;
 }
+
+/* Centralized Floating Action Button (FAB) */
+.fab-fixed-container {
+  position: fixed;
+  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  right: max(1rem, calc(50% - 14rem + 1rem));
+  z-index: 40;
+}
+

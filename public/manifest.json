@@ -1,6 +1,6 @@
 {
-  "name": "Daptrack - Finansial & Streak",
-  "short_name": "Daptrack",
+  "name": "Duittrack - Finansial & Streak",
+  "short_name": "Duittrack",
   "description": "Catat keuangan harian secara disiplin dengan fitur streak ala Duolingo",
   "start_url": "/",
   "display": "standalone",
