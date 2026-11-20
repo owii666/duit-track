@@ -6,7 +6,7 @@ import { Check, X, Calendar, Plus, BookOpen, Camera, ShoppingBag, Coins, Bookmar
 import CategoryIcon from './CategoryIcon';
 
 interface TransactionModalProps {
-  type: 'income' | 'expense' | 'saving';
+  type: 'income' | 'expense' | 'saving' | 'transfer';
   settings: AppSettings;
   isOpen: boolean;
   onClose: () => void;
@@ -87,7 +87,6 @@ export default function TransactionModal({
 
   if (!isOpen) return null;
 
-  // Custom keypress handlers for neobrutalist keypad
   const handleKeyPress = (val: string) => {
     if (val === 'C') {
       setAmountStr('0');
@@ -99,13 +98,13 @@ export default function TransactionModal({
     } else if (val === '000') {
       setAmountStr(prev => {
         if (prev === '0') return '0';
-        if (prev.length >= 10) return prev; // Limit to 10 digits
+        if (prev.length >= 10) return prev;
         return prev + '000';
       });
     } else {
       setAmountStr(prev => {
         if (prev === '0') return val;
-        if (prev.length >= 10) return prev; // Limit length
+        if (prev.length >= 10) return prev;
         return prev + val;
       });
     }
@@ -115,7 +114,7 @@ export default function TransactionModal({
     if (!submitBtnRef.current) return;
     const rect = submitBtnRef.current.getBoundingClientRect();
     const list = [];
-    const colors = ['#FACC15', '#4ADE80', '#60A5FA', '#FB7185', '#C084FC'];
+    const colors = ['#1A434E', '#2E7D5B', '#6B9A91', '#285B63', '#C98A2B'];
 
     for (let i = 0; i < 20; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -134,7 +133,6 @@ export default function TransactionModal({
     }
     setSparkles(list);
 
-    // Remove sparkles after animation finishes
     setTimeout(() => {
       setSparkles([]);
     }, 850);
@@ -150,7 +148,6 @@ export default function TransactionModal({
 
     triggerSparkles();
 
-    // Small delay to let user see sparkles then trigger save
     setTimeout(() => {
       onSave({
         type: activeTab,
@@ -167,31 +164,35 @@ export default function TransactionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-neutral-900/60 backdrop-blur-xs animate-fade-in">
-      {/* Click outside to close */}
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-xs animate-fade-in">
+      {/* Backdrop */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Springy slide-up sheet */}
-      <div className="bg-[var(--color-surface)] w-full max-w-md p-5 neo-border rounded-t-[var(--radius-lg)] shadow-[0_-8px_30px_rgb(0,0,0,0.12)] z-10 max-h-[92vh] overflow-y-auto relative animate-slide-up select-none">
+      {/* Modern Slide-Up Bottom Sheet */}
+      <div className="bg-white w-full max-w-md p-5 border-t border-[var(--color-border)] rounded-t-3xl shadow-2xl z-10 max-h-[92vh] overflow-y-auto relative animate-slide-up select-none">
+        
+        {/* Handle bar indicator */}
+        <div className="w-10 h-1 bg-neutral-300 rounded-full mx-auto mb-3" />
+
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-extrabold tracking-tight">Catat Transaksi Keuangan</h3>
+          <h3 className="text-sm font-bold text-[var(--color-text-primary)]">Catat Transaksi Keuangan</h3>
           <button 
             onClick={onClose}
-            className="w-7 h-7 neo-border bg-neutral-100 rounded-full flex items-center justify-center hover:bg-[var(--color-accent)] cursor-pointer text-xs"
+            className="w-7 h-7 rounded-full bg-[var(--color-bg)] hover:bg-neutral-200 text-[var(--color-text-secondary)] flex items-center justify-center cursor-pointer text-xs transition-colors"
           >
             ✕
           </button>
         </div>
 
         {/* Tab switch */}
-        <div className="grid grid-cols-4 gap-1.5 p-1 bg-neutral-100 neo-border rounded-md mb-4">
+        <div className="grid grid-cols-4 gap-1.5 p-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl mb-4">
           <button
             type="button"
             onClick={() => setActiveTab('expense')}
-            className={`py-2 text-[10px] font-black rounded-md border-2 transition-all flex flex-col items-center justify-center gap-1 ${
+            className={`py-2 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
               activeTab === 'expense'
-                ? 'bg-[var(--color-expense)] text-neutral-900 border-neutral-900 neo-shadow-sm scale-[1.02]'
-                : 'border-transparent text-neutral-500'
+                ? 'bg-[var(--color-danger)] text-white shadow-xs'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             <ShoppingBag size={14} /> Belanja
@@ -199,10 +200,10 @@ export default function TransactionModal({
           <button
             type="button"
             onClick={() => setActiveTab('income')}
-            className={`py-2 text-[10px] font-black rounded-md border-2 transition-all flex flex-col items-center justify-center gap-1 ${
+            className={`py-2 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
               activeTab === 'income'
-                ? 'bg-[var(--color-income)] text-neutral-900 border-neutral-900 neo-shadow-sm scale-[1.02]'
-                : 'border-transparent text-neutral-500'
+                ? 'bg-[var(--color-income)] text-white shadow-xs'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             <Coins size={14} /> Masuk
@@ -210,10 +211,10 @@ export default function TransactionModal({
           <button
             type="button"
             onClick={() => setActiveTab('saving')}
-            className={`py-2 text-[10px] font-black rounded-md border-2 transition-all flex flex-col items-center justify-center gap-1 ${
+            className={`py-2 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
               activeTab === 'saving'
-                ? 'bg-[var(--color-saving)] text-neutral-900 border-neutral-900 neo-shadow-sm scale-[1.02]'
-                : 'border-transparent text-neutral-500'
+                ? 'bg-[var(--color-secondary)] text-white shadow-xs'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             <Bookmark size={14} /> Nabung
@@ -221,10 +222,10 @@ export default function TransactionModal({
           <button
             type="button"
             onClick={() => setActiveTab('transfer')}
-            className={`py-2 text-[10px] font-black rounded-md border-2 transition-all flex flex-col items-center justify-center gap-1 ${
+            className={`py-2 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
               activeTab === 'transfer'
-                ? 'bg-blue-300 text-neutral-900 border-neutral-900 neo-shadow-sm scale-[1.02]'
-                : 'border-transparent text-neutral-500'
+                ? 'bg-[var(--color-primary)] text-white shadow-xs'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             <ArrowRightLeft size={14} /> Transfer
@@ -233,22 +234,24 @@ export default function TransactionModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Big Nominal Input Display */}
-          <div className="bg-neutral-50 p-4 neo-border rounded-[var(--radius-md)] text-center relative overflow-hidden">
-            <span className="text-[10px] font-black tracking-widest text-neutral-400 uppercase">Jumlah Nominal</span>
-            <div className="text-3xl font-black font-mono mt-1 text-neutral-900 truncate">
+          <div className="bg-[var(--color-bg)] p-4 border border-[var(--color-border)] rounded-2xl text-center relative overflow-hidden">
+            <span className="text-[10px] font-bold tracking-wider text-[var(--color-text-muted)] uppercase">Nominal Transaksi</span>
+            <div className="text-3xl font-extrabold font-mono mt-1 text-[var(--color-text-primary)] truncate">
               {formatRupiah(parseInt(amountStr, 10))}
             </div>
           </div>
 
-          {/* Keypad numpad */}
-          <div className="grid grid-cols-3 gap-2 p-1 bg-neutral-100 neo-border rounded-lg">
+          {/* Modern Keypad Numpad */}
+          <div className="grid grid-cols-3 gap-2 p-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0', 'back'].map(k => (
               <button
                 key={k}
                 type="button"
                 onClick={() => handleKeyPress(k)}
-                className={`neo-btn h-11 text-lg font-black font-mono ${
-                  k === 'back' ? 'bg-orange-100 hover:bg-orange-200 text-orange-700' : 'bg-white text-neutral-900'
+                className={`h-11 rounded-xl text-base font-bold font-mono border transition-all cursor-pointer shadow-xs active:scale-95 ${
+                  k === 'back' 
+                    ? 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200' 
+                    : 'bg-white hover:bg-neutral-50 text-[var(--color-text-primary)] border-[var(--color-border)]'
                 }`}
               >
                 {k === 'back' ? '⌫' : k}
@@ -257,32 +260,35 @@ export default function TransactionModal({
             <button
               type="button"
               onClick={() => handleKeyPress('C')}
-              className="neo-btn h-11 text-xs col-span-3 font-black bg-rose-100 text-rose-700 hover:bg-rose-200"
+              className="h-10 text-xs col-span-3 font-semibold bg-white hover:bg-red-50 text-[var(--color-danger)] border border-[var(--color-border)] rounded-xl cursor-pointer transition-colors active:scale-98"
             >
-              HAPUS INPUT (CLEAR)
+              Hapus Nominal (Clear)
             </button>
           </div>
 
           {/* Categories Grid */}
           {activeTab !== 'transfer' && (
             <div className="space-y-1.5">
-              <label className="text-xs font-extrabold text-neutral-400 uppercase tracking-widest">Pilih Kategori</label>
-              <div className="border-2 border-neutral-900 rounded-xl p-2.5 bg-neutral-50 shadow-xs">
+              <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Pilih Kategori</label>
+              <div className="border border-[var(--color-border)] rounded-2xl p-2.5 bg-[var(--color-bg)]">
                 <div className="grid grid-cols-3 gap-2 max-h-[140px] overflow-y-auto pr-0.5">
-                  {settings.categories[activeTab].map(cat => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`py-2 px-1 rounded-md border-2 text-[11px] font-black tracking-tight transition-all text-center truncate ${
-                        selectedCategory === cat
-                          ? 'bg-[var(--color-accent)] border-neutral-900 text-neutral-900 neo-shadow-sm'
-                          : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                  {settings.categories[activeTab].map(cat => {
+                    const isSelected = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`py-2 px-2 rounded-xl text-[11px] font-semibold tracking-tight transition-all text-center truncate cursor-pointer ${
+                          isSelected
+                            ? 'bg-[var(--color-primary)] text-white shadow-xs'
+                            : 'bg-white border border-[var(--color-border)] text-[var(--color-text-primary)] hover:border-[var(--color-border-hover)]'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -293,13 +299,13 @@ export default function TransactionModal({
             <div className="grid grid-cols-2 gap-3">
               {(activeTab === 'expense' || activeTab === 'saving' || activeTab === 'transfer') && (
                 <div className="space-y-1">
-                  <label className="text-xs font-extrabold text-neutral-400 uppercase tracking-widest flex items-center gap-1">
-                    <WalletIcon size={11} /> Dari Dompet
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider flex items-center gap-1">
+                    <WalletIcon size={12} /> Dari Dompet
                   </label>
                   <select
                     value={walletId}
                     onChange={e => setWalletId(e.target.value)}
-                    className="w-full text-xs p-2.5 bg-neutral-50 neo-border rounded-md font-bold focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
                   >
                     {wallets.map(w => (
                       <option key={w.id} value={w.id}>{w.name}</option>
@@ -309,13 +315,13 @@ export default function TransactionModal({
               )}
               {(activeTab === 'income' || activeTab === 'transfer') && (
                 <div className="space-y-1">
-                  <label className="text-xs font-extrabold text-neutral-400 uppercase tracking-widest flex items-center gap-1">
-                    <WalletIcon size={11} /> Ke Dompet
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider flex items-center gap-1">
+                    <WalletIcon size={12} /> Ke Dompet
                   </label>
                   <select
                     value={activeTab === 'transfer' ? toWalletId : walletId}
                     onChange={e => activeTab === 'transfer' ? setToWalletId(e.target.value) : setWalletId(e.target.value)}
-                    className="w-full text-xs p-2.5 bg-neutral-50 neo-border rounded-md font-bold focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
                   >
                     {wallets.map(w => (
                       <option key={w.id} value={w.id}>{w.name}</option>
@@ -328,15 +334,15 @@ export default function TransactionModal({
 
           {/* Photo attachment input */}
           <div className="space-y-1">
-            <label className="text-xs font-extrabold text-neutral-400 uppercase tracking-widest flex items-center gap-1">
-              <Camera size={11} /> Lampiran Foto (Opsional)
+            <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider flex items-center gap-1">
+              <Camera size={12} /> Lampiran Struk / Foto (Opsional)
             </label>
-            <div className="flex items-center gap-3 bg-neutral-50 p-2.5 neo-border rounded-md">
-              <div className="w-12 h-12 rounded border-2 border-neutral-950 bg-white flex items-center justify-center overflow-hidden shrink-0">
+            <div className="flex items-center gap-3 bg-[var(--color-bg)] p-2.5 border border-[var(--color-border)] rounded-xl">
+              <div className="w-12 h-12 rounded-xl border border-[var(--color-border)] bg-white flex items-center justify-center overflow-hidden shrink-0">
                 {photo ? (
                   <img src={photo} alt="Lampiran" className="w-full h-full object-cover" />
                 ) : (
-                  <Camera size={18} className="text-neutral-300" />
+                  <Camera size={18} className="text-[var(--color-text-muted)]" />
                 )}
               </div>
               <div className="flex-1">
@@ -362,7 +368,7 @@ export default function TransactionModal({
                 />
                 <label
                   htmlFor="tx-photo-input"
-                  className="neo-btn bg-white hover:bg-neutral-50 px-2.5 py-1.5 text-[10px] font-black cursor-pointer"
+                  className="px-3 py-1.5 bg-white hover:bg-neutral-50 border border-[var(--color-border)] rounded-lg text-xs font-semibold text-[var(--color-text-primary)] cursor-pointer inline-block transition-colors"
                 >
                   Pilih Foto
                 </label>
@@ -370,7 +376,7 @@ export default function TransactionModal({
                   <button
                     type="button"
                     onClick={() => setPhoto('')}
-                    className="text-rose-500 font-bold text-[10px] ml-3 hover:underline"
+                    className="text-[var(--color-danger)] font-medium text-xs ml-3 hover:underline cursor-pointer"
                   >
                     Hapus
                   </button>
@@ -382,26 +388,26 @@ export default function TransactionModal({
           {/* Note and Date Input */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-extrabold text-neutral-400 uppercase tracking-widest flex items-center gap-1">
-                <BookOpen size={11} /> Catatan
+              <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider flex items-center gap-1">
+                <BookOpen size={12} /> Catatan
               </label>
               <input
                 type="text"
                 placeholder="cth: Nasi goreng, bonus"
                 value={note}
                 onChange={e => setNote(e.target.value)}
-                className="w-full text-xs p-2.5 bg-neutral-50 neo-border rounded-md font-medium text-neutral-800 focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-extrabold text-neutral-400 uppercase tracking-widest flex items-center gap-1">
-                <Calendar size={11} /> Tanggal
+              <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider flex items-center gap-1">
+                <Calendar size={12} /> Tanggal
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full text-xs p-2.5 bg-neutral-50 neo-border rounded-md font-mono text-neutral-800 focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-mono text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
               />
             </div>
           </div>
@@ -410,12 +416,12 @@ export default function TransactionModal({
           <button
             ref={submitBtnRef}
             type="submit"
-            className="neo-btn neo-btn-accent w-full py-3 mt-4 text-sm font-black flex items-center justify-center gap-2 relative overflow-hidden"
+            className="w-full py-3.5 mt-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 relative overflow-hidden shadow-md cursor-pointer transition-all active:scale-[0.99]"
           >
             <Check size={18} />
             <span>Simpan Transaksi</span>
 
-            {/* Sparkles celebration animation overlay */}
+            {/* Sparkles animation overlay */}
             {sparkles.map(sp => (
               <span
                 key={sp.id}

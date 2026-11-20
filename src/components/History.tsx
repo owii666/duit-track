@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Transaction, AppSettings, TransactionComment, Wallet } from '../types';
-import { getWallets } from '../db/indexedDB';
+import { getWallets, updateTransaction } from '../db/indexedDB';
 import { formatRupiah, parseLocalDate } from '../utils/financeHelpers';
 import { 
   Search, 
@@ -8,19 +8,18 @@ import {
   Heart, 
   MessageCircle, 
   Send, 
-  Calendar 
+  Calendar,
+  Sparkles
 } from 'lucide-react';
-import { updateTransaction } from '../db/indexedDB';
 import gsap from 'gsap';
 
 interface HistoryProps {
   transactions: Transaction[];
   settings: AppSettings;
   onDeleteTransaction: (id: number) => void;
-  onUpdateTransaction?: () => void; // Reload callback
+  onUpdateTransaction?: () => void;
 }
 
-// Sub-component for individual Instagram post to keep state isolated
 interface InstagramCardProps {
   key?: any;
   tx: Transaction;
@@ -39,13 +38,11 @@ const InstagramCard = React.memo(function InstagramCard({ tx, userName, profileP
   const [showAllComments, setShowAllComments] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
 
-  // Keep internal likes state synced when prop updates
   useEffect(() => {
     setLikes(tx.likes || 0);
     setIsLiked(tx.likedByCurrentUser || false);
   }, [tx.likes, tx.likedByCurrentUser]);
 
-  // Handle double click (auto-like)
   const handleDoubleClick = () => {
     setShowHeartAnimation(true);
     setTimeout(() => setShowHeartAnimation(false), 900);
@@ -64,7 +61,6 @@ const InstagramCard = React.memo(function InstagramCard({ tx, userName, profileP
     }
   };
 
-  // Toggle like via Heart Button
   const handleLikeToggle = () => {
     const nextLiked = !isLiked;
     const nextLikes = nextLiked ? likes + 1 : Math.max(0, likes - 1);
@@ -78,7 +74,6 @@ const InstagramCard = React.memo(function InstagramCard({ tx, userName, profileP
     });
   };
 
-  // Submit comment
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim()) return;
@@ -102,21 +97,20 @@ const InstagramCard = React.memo(function InstagramCard({ tx, userName, profileP
     commentInputRef.current?.focus();
   };
 
-  // Determine card design background color for fallback typographic poster
   const getPosterBg = () => {
-    if (tx.amount === 0) return 'bg-neutral-50 border-neutral-200';
-    if (tx.type === 'income') return 'bg-emerald-50 border-emerald-200';
-    if (tx.type === 'saving') return 'bg-blue-50 border-blue-200';
-    if (tx.type === 'transfer') return 'bg-blue-50 border-blue-200';
-    return 'bg-rose-50 border-rose-200';
+    if (tx.amount === 0) return 'bg-[var(--color-bg)]';
+    if (tx.type === 'income') return 'bg-[var(--color-income-light)]';
+    if (tx.type === 'saving') return 'bg-[var(--color-saving-light)]';
+    if (tx.type === 'transfer') return 'bg-[var(--color-primary-light)]';
+    return 'bg-[var(--color-expense-light)]';
   };
 
-  const getPosterTextBadge = () => {
-    if (tx.amount === 0) return 'bg-neutral-250 text-neutral-800 border-neutral-400';
-    if (tx.type === 'income') return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-    if (tx.type === 'saving') return 'bg-blue-100 text-blue-800 border-blue-300';
-    if (tx.type === 'transfer') return 'bg-blue-100 text-blue-800 border-blue-300';
-    return 'bg-rose-100 text-rose-800 border-rose-300';
+  const getBadgeStyle = () => {
+    if (tx.amount === 0) return 'bg-neutral-100 text-[var(--color-text-secondary)] border-[var(--color-border)]';
+    if (tx.type === 'income') return 'badge-income';
+    if (tx.type === 'saving') return 'badge-saving';
+    if (tx.type === 'transfer') return 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border-[#D0E3E6]';
+    return 'badge-expense';
   };
 
   const relativeDate = useMemo(() => {
@@ -137,44 +131,43 @@ const InstagramCard = React.memo(function InstagramCard({ tx, userName, profileP
     return w ? w.name : null;
   }, [tx.toWalletId, wallets]);
 
-  // Limit shown comments
   const visibleComments = useMemo(() => {
     const list = tx.comments || [];
     if (showAllComments) return list;
-    return list.slice(-2); // last 2 comments
+    return list.slice(-2);
   }, [tx.comments, showAllComments]);
 
   return (
-    <div className="bg-white border-2 border-neutral-900 rounded-xl overflow-hidden neo-shadow-sm flex flex-col relative select-none">
+    <div className="bg-white border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-xs flex flex-col relative select-none hover:border-[var(--color-border-hover)] transition-all">
       
       {/* 1. Header Post */}
-      <div className="flex justify-between items-center p-3 border-b-2 border-neutral-900 bg-white">
+      <div className="flex justify-between items-center p-3.5 border-b border-[var(--color-border)] bg-white">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full border-1.5 border-neutral-950 bg-neutral-100 flex items-center justify-center overflow-hidden shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[var(--color-primary-light)] border border-[var(--color-border)] flex items-center justify-center overflow-hidden shrink-0">
             {profilePhoto ? (
               <img src={profilePhoto} alt="" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-xs font-black text-neutral-600 uppercase">{userName.charAt(0)}</span>
+              <span className="text-xs font-bold text-[var(--color-primary)] uppercase">{userName.charAt(0)}</span>
             )}
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-black text-neutral-900">{userName}</span>
-              <span className={`text-[8px] font-black uppercase px-1 rounded border ${getPosterTextBadge()}`}>
-                {tx.amount === 0 ? 'Harian' : tx.type === 'income' ? 'Masuk' : tx.type === 'saving' ? 'Nabung' : tx.type === 'transfer' ? 'Transfer' : 'Belanja'}
+              <span className="text-xs font-bold text-[var(--color-text-primary)]">{userName}</span>
+              <span className={`text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-md border ${getBadgeStyle()}`}>
+                {tx.amount === 0 ? 'Check-in' : tx.type === 'income' ? 'Masuk' : tx.type === 'saving' ? 'Nabung' : tx.type === 'transfer' ? 'Transfer' : 'Belanja'}
               </span>
             </div>
-            <p className="text-[9px] font-mono text-neutral-400 font-bold">{relativeDate}</p>
+            <p className="text-[10px] text-[var(--color-text-muted)] font-medium">{relativeDate}</p>
           </div>
         </div>
 
         {/* Delete transaction */}
         <button 
           onClick={() => tx.id !== undefined && onDelete(tx.id)}
-          className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+          className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-light)] rounded-lg transition-colors cursor-pointer"
           title="Hapus Transaksi"
         >
-          <Trash2 size={13} />
+          <Trash2 size={14} />
         </button>
       </div>
 
@@ -184,95 +177,96 @@ const InstagramCard = React.memo(function InstagramCard({ tx, userName, profileP
         className="relative overflow-hidden cursor-pointer"
       >
         {tx.photo ? (
-          /* Case A: Photo uploaded */
-          <div className="aspect-square w-full bg-neutral-50 flex items-center justify-center border-b-2 border-neutral-900">
+          <div className="aspect-square w-full bg-[var(--color-bg)] flex items-center justify-center border-b border-[var(--color-border)]">
             <img src={tx.photo} alt="Catatan keuangan" className="w-full h-full object-cover" />
           </div>
         ) : (
-          /* Case B: Elegant Graphic typographic poster */
-          <div className={`aspect-square w-full flex flex-col justify-between p-6 border-b-2 border-neutral-900 ${getPosterBg()}`}>
+          <div className={`aspect-square w-full flex flex-col justify-between p-6 border-b border-[var(--color-border)] ${getPosterBg()}`}>
             <div>
-              <span className="text-[9px] font-black tracking-widest text-neutral-400 uppercase">Kategori Transaksi</span>
-              <div className="text-lg font-black mt-0.5 text-neutral-900">{tx.category}</div>
+              <span className="text-[10px] font-bold tracking-wider text-[var(--color-text-muted)] uppercase">Kategori</span>
+              <div className="text-lg font-bold mt-0.5 text-[var(--color-text-primary)]">{tx.category}</div>
             </div>
 
             <div className="my-auto text-center py-4">
-              <div className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Jumlah Nominal</div>
-              <div className="text-2xl font-black font-mono tracking-tight text-neutral-950 mt-1">
-                {tx.amount === 0 ? '' : tx.type === 'expense' ? '-' : ''}{formatRupiah(tx.amount)}
+              <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Nominal Transaksi</div>
+              <div className={`text-2xl font-extrabold font-mono tracking-tight mt-1 ${
+                tx.type === 'expense' ? 'text-[var(--color-danger)]' : 
+                tx.type === 'saving' ? 'text-[var(--color-secondary)]' : 'text-[var(--color-income)]'
+              }`}>
+                {tx.amount === 0 ? 'Rp 0' : tx.type === 'expense' ? '-' : ''}{formatRupiah(tx.amount)}
               </div>
             </div>
 
-            <div className="border-t border-dashed border-neutral-300 pt-3">
-              <span className="text-[9px] font-black tracking-widest text-neutral-400 uppercase block">Catatan</span>
-              <p className="text-xs font-black text-neutral-800 truncate mt-0.5">
-                {tx.note ? `"${tx.note}"` : `Tanpa keterangan tambahan`}
+            <div className="border-t border-neutral-200/80 pt-3">
+              <span className="text-[10px] font-bold tracking-wider text-[var(--color-text-muted)] uppercase block">Catatan</span>
+              <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate mt-0.5">
+                {tx.note ? `"${tx.note}"` : `Tanpa catatan tambahan`}
               </p>
             </div>
           </div>
         )}
 
-        {/* Big Heart animation pop-up */}
+        {/* Heart animation pop-up */}
         {showHeartAnimation && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/20 backdrop-blur-xs animate-fade-in pointer-events-none z-20">
-            <div className="animate-scale-up-heart p-4 bg-white/95 rounded-full shadow-lg border-2 border-neutral-900">
-              <Heart size={48} className="text-rose-500 fill-rose-500 animate-pulse" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-xs animate-fade-in pointer-events-none z-20">
+            <div className="animate-scale-up-heart p-4 bg-white/95 rounded-full shadow-lg border border-[var(--color-border)]">
+              <Heart size={44} className="text-[var(--color-danger)] fill-[var(--color-danger)] animate-pulse" />
             </div>
           </div>
         )}
       </div>
 
       {/* 3. Action Buttons & Likes Counter */}
-      <div className="p-3 bg-white flex flex-col gap-2">
+      <div className="p-3.5 bg-white flex flex-col gap-2">
         <div className="flex items-center gap-3">
           <button 
             onClick={handleLikeToggle}
-            className="transition-transform active:scale-125 focus:outline-none"
+            className="transition-transform active:scale-125 focus:outline-none cursor-pointer"
           >
             <Heart 
               size={20} 
-              className={isLiked ? "text-rose-500 fill-rose-500" : "text-neutral-900 hover:text-rose-500"} 
-              strokeWidth={2.5}
+              className={isLiked ? "text-[var(--color-danger)] fill-[var(--color-danger)]" : "text-[var(--color-text-primary)] hover:text-[var(--color-danger)]"} 
+              strokeWidth={2}
             />
           </button>
           <button 
             onClick={handleFocusComment}
-            className="focus:outline-none"
+            className="focus:outline-none cursor-pointer text-[var(--color-text-primary)] hover:text-[var(--color-secondary)]"
           >
-            <MessageCircle size={20} className="text-neutral-900 hover:text-blue-500" strokeWidth={2.5} />
+            <MessageCircle size={20} strokeWidth={2} />
           </button>
         </div>
 
         {/* Suka Counter */}
-        <div className="text-xs font-black text-neutral-900">
+        <div className="text-xs font-bold text-[var(--color-text-primary)]">
           {likes > 0 ? `${likes} Suka` : 'Belum ada yang menyukai'}
         </div>
 
         {/* Caption */}
-        <div className="text-xs leading-relaxed text-neutral-800">
-          <span className="font-black text-neutral-950 mr-1.5">{userName}</span>
+        <div className="text-xs leading-relaxed text-[var(--color-text-primary)]">
+          <span className="font-bold mr-1.5">{userName}</span>
           {tx.amount === 0 ? (
-            <span>mengonfirmasi kehadiran harian untuk menjaga streak tetap aktif. {tx.note && `(${tx.note})`}</span>
+            <span className="text-[var(--color-text-secondary)]">mengonfirmasi kehadiran harian untuk menjaga rekor streak aktif. {tx.note && `(${tx.note})`}</span>
           ) : tx.photo ? (
-            <span>mencatat transaksi <strong className="font-black">{tx.category}</strong> senilar <strong className="font-mono text-neutral-900">{formatRupiah(tx.amount)}</strong>
-            {walletName && <span className="text-neutral-500"> dari {walletName}</span>}
-            {toWalletName && <span className="text-neutral-500"> ke {toWalletName}</span>}
+            <span className="text-[var(--color-text-secondary)]">mencatat transaksi <strong className="font-bold text-[var(--color-text-primary)]">{tx.category}</strong> senilai <strong className="font-mono text-[var(--color-text-primary)]">{formatRupiah(tx.amount)}</strong>
+            {walletName && <span> dari {walletName}</span>}
+            {toWalletName && <span> ke {toWalletName}</span>}
             . {tx.note && `(${tx.note})`}</span>
           ) : (
-            <span>mengunggah poster catatan <strong className="font-black">{tx.category}</strong>
-            {walletName && <span className="text-neutral-500"> dari {walletName}</span>}
-            {toWalletName && <span className="text-neutral-500"> ke {toWalletName}</span>}
+            <span className="text-[var(--color-text-secondary)]">mencatat aktivitas <strong className="font-bold text-[var(--color-text-primary)]">{tx.category}</strong>
+            {walletName && <span> dari {walletName}</span>}
+            {toWalletName && <span> ke {toWalletName}</span>}
             .</span>
           )}
         </div>
 
         {/* 4. Comments Section */}
         {tx.comments && tx.comments.length > 0 && (
-          <div className="mt-1 pt-2 border-t border-neutral-100 space-y-1.5">
+          <div className="mt-1 pt-2 border-t border-[var(--color-border)] space-y-1.5">
             {tx.comments.length > 2 && (
               <button 
                 onClick={() => setShowAllComments(!showAllComments)}
-                className="text-[10px] font-bold text-neutral-400 hover:underline block mb-1"
+                className="text-[11px] font-semibold text-[var(--color-text-muted)] hover:underline block mb-1 cursor-pointer"
               >
                 {showAllComments ? 'Sembunyikan sebagian komentar' : `Lihat semua ${tx.comments.length} komentar`}
               </button>
@@ -280,8 +274,8 @@ const InstagramCard = React.memo(function InstagramCard({ tx, userName, profileP
 
             <div className="space-y-1">
               {visibleComments.map(c => (
-                <div key={c.id} className="text-[11px] leading-relaxed text-neutral-700">
-                  <span className="font-extrabold text-neutral-950 mr-1.5">{c.user}</span>
+                <div key={c.id} className="text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                  <span className="font-bold text-[var(--color-text-primary)] mr-1.5">{c.user}</span>
                   <span>{c.text}</span>
                 </div>
               ))}
@@ -297,13 +291,14 @@ const InstagramCard = React.memo(function InstagramCard({ tx, userName, profileP
             placeholder="Tambahkan komentar..."
             value={commentText}
             onChange={e => setCommentText(e.target.value)}
-            className="flex-1 text-xs px-2.5 py-1.5 bg-neutral-50 border border-neutral-300 rounded-md font-medium text-neutral-800 focus:outline-none focus:border-neutral-900"
+            className="flex-1 text-xs px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl font-medium text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
           />
           <button 
             type="submit"
-            className="p-1.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-md text-neutral-700 hover:text-neutral-900 transition-colors"
+            className="p-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-xl transition-colors cursor-pointer"
+            title="Kirim Komentar"
           >
-            <Send size={12} />
+            <Send size={13} />
           </button>
         </form>
       </div>
@@ -311,7 +306,6 @@ const InstagramCard = React.memo(function InstagramCard({ tx, userName, profileP
   );
 });
 
-// Helper to parse local date to YYYY-MM-DD safely
 const getLocalDateString = (d: Date) => {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -319,7 +313,6 @@ const getLocalDateString = (d: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-// Helper to determine date header label
 const getHeaderLabel = (dateStr: string) => {
   const today = new Date();
   const todayStr = getLocalDateString(today);
@@ -335,13 +328,11 @@ const getHeaderLabel = (dateStr: string) => {
   } else {
     const parts = dateStr.split('-');
     if (parts.length === 3) {
-      // "YYYY-MM-DD" -> "D/M/YYYY"
       const y = parseInt(parts[0], 10);
       const m = parseInt(parts[1], 10);
       const d = parseInt(parts[2], 10);
       return `${d}/${m}/${y}`;
     }
-    // Fallback if formatting is unexpected
     const d = parseLocalDate(dateStr);
     if (!isNaN(d.getTime())) {
       return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
@@ -358,8 +349,6 @@ export default function History({
 }: HistoryProps) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  
-  // Lazy load state: only display visibleCount items first
   const [visibleCount, setVisibleCount] = useState(4);
 
   const [userName] = useState(() => localStorage.getItem('finance_user_name') || 'Budi');
@@ -370,19 +359,13 @@ export default function History({
     getWallets().then(setWallets).catch(console.error);
   }, []);
 
-  // GSAP Entrance Animations
   useEffect(() => {
     gsap.fromTo('#history-search',
-      { opacity: 0, y: -10 },
-      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
-    );
-    gsap.fromTo('.neo-shadow-sm',
-      { opacity: 0, y: 15 },
-      { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out', delay: 0.05 }
+      { opacity: 0, y: -8 },
+      { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
     );
   }, [debouncedSearch]);
 
-  // Debouncing for 0.5 seconds (500ms)
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
@@ -393,10 +376,8 @@ export default function History({
     };
   }, [search]);
 
-  // Infinite scroll trigger
   useEffect(() => {
     const handleScroll = () => {
-      // Check if we have scrolled near the bottom of the page
       if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 150) {
         setVisibleCount(prev => prev + 4);
       }
@@ -405,7 +386,6 @@ export default function History({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Update transaction likes & comments in IndexedDB - optimized with useCallback
   const handleUpdate = useCallback(async (updatedTx: Transaction) => {
     try {
       await updateTransaction(updatedTx);
@@ -417,7 +397,6 @@ export default function History({
     }
   }, [onUpdateTransaction]);
 
-  // Filter transaction list purely based on debounced search
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
       if (debouncedSearch.trim()) {
@@ -430,18 +409,16 @@ export default function History({
     });
   }, [transactions, debouncedSearch]);
 
-  // Whenever debouncedSearch changes, reset pagination window back to 4
   useEffect(() => {
     setVisibleCount(4);
   }, [debouncedSearch]);
 
-  // Paginated/Sliced transactions
   const paginatedTransactions = useMemo(() => {
     return filteredTransactions.slice(0, visibleCount);
   }, [filteredTransactions, visibleCount]);
 
   return (
-    <div className="space-y-5 px-1 py-1">
+    <div className="space-y-4 px-1 py-1">
       {/* Search Input Bar */}
       <div id="history-search" className="relative">
         <input
@@ -449,18 +426,18 @@ export default function History({
           placeholder="Cari transaksi (cth: makanan, bonus)..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-white text-sm border-2 border-neutral-900 rounded-lg neo-shadow-sm font-bold focus:outline-none focus:ring-0 placeholder-neutral-400"
+          className="w-full pl-10 pr-4 py-3 bg-white text-xs border border-[var(--color-border)] rounded-xl shadow-xs font-medium text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 transition-all"
         />
-        <Search className="absolute left-3 top-3.5 text-neutral-400" size={16} />
+        <Search className="absolute left-3.5 top-3.5 text-[var(--color-text-muted)]" size={16} />
       </div>
 
-      {/* Transaction Feed (Instagram Style) */}
+      {/* Transaction Feed */}
       {paginatedTransactions.length === 0 ? (
-        <div className="bg-white p-12 text-center border-2 border-neutral-900 rounded-lg neo-shadow-sm">
-          <p className="text-sm font-bold text-neutral-400">Tidak ada aktifitas keuangan yang cocok.</p>
+        <div className="bg-white p-10 text-center border border-[var(--color-border)] rounded-2xl shadow-xs">
+          <p className="text-xs font-medium text-[var(--color-text-muted)]">Tidak ada aktivitas keuangan yang cocok.</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {(() => {
             let lastHeaderLabel = '';
             return paginatedTransactions.map((tx, idx) => {
@@ -472,8 +449,8 @@ export default function History({
               return (
                 <React.Fragment key={tx.id || idx}>
                   {showHeader && (
-                    <div className="flex items-center justify-center py-2 animate-fade-in">
-                      <span className="bg-neutral-50 border-2 border-neutral-900 px-3.5 py-1.5 rounded-full text-[10px] font-black text-neutral-900 uppercase tracking-widest neo-shadow-xs">
+                    <div className="flex items-center justify-center py-1">
+                      <span className="bg-white border border-[var(--color-border)] px-3 py-1 rounded-full text-[10px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider shadow-xs">
                         {currentHeaderLabel}
                       </span>
                     </div>
@@ -496,9 +473,9 @@ export default function History({
             <div className="pt-2 text-center">
               <button 
                 onClick={() => setVisibleCount(prev => prev + 4)}
-                className="neo-btn bg-white hover:bg-neutral-50 text-xs font-black px-4 py-2.5"
+                className="py-2.5 px-4 bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] text-xs font-bold text-[var(--color-text-primary)] rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                Muat Lebih Banyak Aktifitas...
+                Muat Lebih Banyak Aktivitas
               </button>
             </div>
           )}

@@ -67,7 +67,7 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
   const [budgetCatSelect, setBudgetCatSelect] = useState('Makan');
   const [budgetLimitInput, setBudgetLimitInput] = useState('');
 
-  // Custom Neobrutalist Modals State
+  // Custom Modals State
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -90,12 +90,8 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
   // Trigger GSAP entrance animations on mount or tab change
   useEffect(() => {
     gsap.fromTo('#goals-header',
-      { opacity: 0, y: -10 },
-      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
-    );
-    gsap.fromTo('.neo-card, .goal-card, .budget-card',
-      { opacity: 0, y: 15 },
-      { opacity: 1, y: 0, duration: 0.5, stagger: 0.07, ease: 'power2.out', delay: 0.05 }
+      { opacity: 0, y: -8 },
+      { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
     );
   }, [activePageTab, selectedMonth, selectedYear]);
 
@@ -121,7 +117,6 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
     }
   };
 
-  // Strictly pull expense and saving categories from settings (managed in Profile page)
   const expenseCategories = useMemo(() => {
     return settings?.categories?.expense || ['Makan', 'Transport', 'Belanja', 'Hiburan', 'Tagihan', 'Kesehatan', 'Pendidikan', 'Lainnya'];
   }, [settings]);
@@ -130,13 +125,11 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
     return settings?.categories?.saving || ['Dana Darurat', 'Investasi', 'Tabungan', 'Liburan'];
   }, [settings]);
 
-  // Combined available categories (strictly integrated with Profile page categories)
   const availableCategories = useMemo(() => {
     const list = Array.from(new Set([...expenseCategories, ...savingCategories]));
     return list.length > 0 ? list : ['Makan', 'Transport', 'Belanja', 'Hiburan', 'Tagihan', 'Kesehatan', 'Pendidikan', 'Lainnya'];
   }, [expenseCategories, savingCategories]);
 
-  // Dynamically calculate actual spending per category for selected month/year from transactions
   const categorySpentMap = useMemo(() => {
     const map: Record<string, number> = {};
     transactions.forEach(t => {
@@ -150,7 +143,6 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
     return map;
   }, [transactions, selectedMonth, selectedYear]);
 
-  // Compute total monthly budget summary
   const budgetSummary = useMemo(() => {
     let totalTarget = 0;
     let totalSpent = 0;
@@ -173,17 +165,14 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
     };
   }, [budgets, categorySpentMap, selectedMonth, selectedYear]);
 
-  // Helper notice popup launcher
   const showNotice = (title: string, message: string) => {
     setNoticeModal({ isOpen: true, title, message });
   };
 
-  // Helper confirm popup launcher
   const showConfirm = (title: string, message: string, onConfirm: () => void) => {
     setConfirmModal({ isOpen: true, title, message, onConfirm });
   };
 
-  // Handle Photo Upload
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -199,7 +188,6 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
     }
   };
 
-  // Create Goal
   const handleCreateGoal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newTarget) {
@@ -310,7 +298,6 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
     }
   };
 
-  // Open Budget Modal for adding or editing
   const handleOpenBudgetModal = (budgetToEdit?: MonthlyBudget) => {
     if (availableCategories.length === 0) {
       showNotice('Tidak Ada Kategori', 'Silakan buat kategori pengeluaran terlebih dahulu di halaman Profil!');
@@ -323,7 +310,6 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
       setBudgetLimitInput(budgetToEdit.targetAmount.toString());
     } else {
       setEditingBudgetId(null);
-      // Select first available category not already budgeted, or default to first
       const unbudgeted = availableCategories.find(cat => !budgets.some(b => b.category === cat));
       setBudgetCatSelect(unbudgeted || availableCategories[0]);
       setBudgetLimitInput('');
@@ -331,7 +317,6 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
     setIsBudgetModalOpen(true);
   };
 
-  // Quick Preset Add Helper
   const handleAddPresetBudget = (catName: string) => {
     const existing = budgets.find(b => b.category.toLowerCase() === catName.toLowerCase());
     if (existing) {
@@ -344,7 +329,6 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
     }
   };
 
-  // Save / Update Budget
   const handleSaveBudgetForm = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalCategory = budgetCatSelect;
@@ -377,7 +361,6 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
     }
   };
 
-  // Delete Budget
   const handleDeleteBudget = (id: string) => {
     showConfirm(
       'Hapus Alokasi Budget?',
@@ -399,34 +382,34 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
   }, []);
 
   return (
-    <div className="space-y-5 px-1 py-1">
+    <div className="space-y-4 px-1 py-1">
       {/* 1. Top Navigation Tab Switcher */}
-      <div id="goals-header" className="bg-white p-2.5 neo-border rounded-[var(--radius-md)] neo-shadow-sm">
-        <div className="grid grid-cols-2 gap-2 bg-neutral-100 p-1.5 neo-border rounded-lg">
+      <div id="goals-header" className="bg-white p-1.5 border border-[var(--color-border)] rounded-2xl shadow-xs">
+        <div className="grid grid-cols-2 gap-1.5 bg-[var(--color-bg)] p-1 rounded-xl">
           <button
             onClick={() => {
               setActivePageTab('goals');
               setSelectedGoal(null);
             }}
-            className={`py-2.5 text-xs font-black rounded-md flex items-center justify-center gap-2 cursor-pointer transition-all ${
+            className={`py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
               activePageTab === 'goals'
-                ? 'bg-[var(--color-accent)] text-neutral-950 neo-border neo-shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 font-bold'
+                ? 'bg-[var(--color-primary)] text-white shadow-xs'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
-            <Target size={16} />
+            <Target size={15} />
             <span>Target Impian</span>
           </button>
           
           <button
             onClick={() => setActivePageTab('budgeting')}
-            className={`py-2.5 text-xs font-black rounded-md flex items-center justify-center gap-2 cursor-pointer transition-all ${
+            className={`py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer transition-all ${
               activePageTab === 'budgeting'
-                ? 'bg-[var(--color-accent)] text-neutral-950 neo-border neo-shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 font-bold'
+                ? 'bg-[var(--color-primary)] text-white shadow-xs'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
-            <PieChart size={16} />
+            <PieChart size={15} />
             <span>Budgeting Bulanan</span>
           </button>
         </div>
@@ -436,32 +419,34 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
       {/* TAB A: TARGET IMPIAN */}
       {/* ======================================================== */}
       {activePageTab === 'goals' && (
-          <>
-            {!selectedGoal && !isAddingGoal && (
-              <div className="bg-white p-4.5 neo-border rounded-[var(--radius-md)] neo-shadow-sm flex flex-col gap-3 neo-card">
+        <>
+          {!selectedGoal && !isAddingGoal && (
+            <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs flex flex-col gap-3">
+              <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-md font-black tracking-tight">Rencana Target Impian</h2>
-                  <p className="text-xs font-mono text-neutral-400 font-bold mt-0.5">Atur & kumpulkan budget impianmu</p>
+                  <h2 className="text-sm font-bold text-[var(--color-text-primary)] tracking-tight">Rencana Target Impian</h2>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">Kumpulkan dana untuk mencapai tujuan finansialmu</p>
                 </div>
-                <button
-                  onClick={() => setIsAddingGoal(true)}
-                  className="w-full neo-btn bg-[var(--color-accent)] hover:bg-yellow-400 px-3 py-2 text-xs font-black flex justify-center items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus size={15} /> Tambah Target
-                </button>
               </div>
-            )}
+              <button
+                onClick={() => setIsAddingGoal(true)}
+                className="w-full py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-xs font-bold rounded-xl flex justify-center items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              >
+                <Plus size={15} /> Tambah Target Baru
+              </button>
+            </div>
+          )}
 
           {/* Adding Form */}
           {isAddingGoal && (
-            <div className="bg-white p-5 neo-border rounded-[var(--radius-md)] neo-shadow-md space-y-4 animate-fade-in neo-card">
-              <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
-                <span className="text-xs font-extrabold uppercase text-neutral-500 flex items-center gap-1.5">
-                  <Target size={15} className="text-amber-500" /> Buat Target Impian Baru
+            <div className="bg-white p-5 border border-[var(--color-border)] rounded-2xl shadow-sm space-y-4 animate-fade-in">
+              <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
+                <span className="text-xs font-bold uppercase text-[var(--color-text-primary)] flex items-center gap-1.5">
+                  <Target size={15} className="text-[var(--color-secondary)]" /> Buat Target Impian Baru
                 </span>
                 <button
                   onClick={() => setIsAddingGoal(false)}
-                  className="p-1 text-neutral-400 hover:text-neutral-900 rounded cursor-pointer"
+                  className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] rounded-lg cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -469,13 +454,13 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
 
               <form onSubmit={handleCreateGoal} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-wider block">Foto Target (Opsional)</label>
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider block">Foto Target (Opsional)</label>
                   <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 rounded-lg neo-border bg-neutral-50 flex items-center justify-center overflow-hidden shrink-0">
+                    <div className="w-16 h-16 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] flex items-center justify-center overflow-hidden shrink-0">
                       {newPhoto ? (
                         <img src={newPhoto} alt="Preview" className="w-full h-full object-cover" />
                       ) : (
-                        <Camera size={22} className="text-neutral-400" />
+                        <Camera size={22} className="text-[var(--color-text-muted)]" />
                       )}
                     </div>
                     <div className="flex-1">
@@ -488,7 +473,7 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
                       />
                       <label
                         htmlFor="goal-photo-input"
-                        className="neo-btn bg-neutral-100 hover:bg-neutral-200 py-1.5 px-3 text-xs font-bold cursor-pointer inline-block"
+                        className="px-3 py-1.5 bg-white hover:bg-neutral-50 border border-[var(--color-border)] rounded-lg text-xs font-semibold text-[var(--color-text-primary)] cursor-pointer inline-block transition-colors"
                       >
                         Unggah Gambar
                       </label>
@@ -496,45 +481,45 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
                         <button
                           type="button"
                           onClick={() => setNewPhoto('')}
-                          className="text-rose-500 font-bold text-xs ml-3 hover:underline cursor-pointer"
+                          className="text-[var(--color-danger)] font-medium text-xs ml-3 hover:underline cursor-pointer"
                         >
                           Hapus
                         </button>
                       )}
-                      <p className="text-[9px] text-neutral-400 font-bold mt-1">Gunakan foto impianmu</p>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-1">Gunakan foto impianmu agar makin termotivasi</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-neutral-400 uppercase">Nama Target / Impian</label>
+                  <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Nama Target / Impian</label>
                   <input
                     type="text"
                     value={newTitle}
                     onChange={e => setNewTitle(e.target.value)}
-                    className="w-full text-xs p-3 bg-neutral-50 neo-border rounded-lg font-bold focus:outline-none focus:bg-white"
-                    placeholder="cth: Beli Laptop Asus, Liburan Bali"
+                    className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
+                    placeholder="cth: Beli Laptop Baru, Liburan ke Bali"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-neutral-400 uppercase">Nominal Target (Rp)</label>
+                    <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Nominal Target (Rp)</label>
                     <input
                       type="number"
                       value={newTarget}
                       onChange={e => setNewTarget(e.target.value)}
-                      className="w-full text-xs p-3 bg-neutral-50 neo-border rounded-lg font-mono font-bold focus:outline-none focus:bg-white"
+                      className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-mono font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
                       placeholder="cth: 15000000"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-neutral-400 uppercase">Dana Terkumpul Awal</label>
+                    <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Dana Terkumpul Awal</label>
                     <input
                       type="number"
                       value={newCurrent}
                       onChange={e => setNewCurrent(e.target.value)}
-                      className="w-full text-xs p-3 bg-neutral-50 neo-border rounded-lg font-mono font-bold focus:outline-none focus:bg-white"
+                      className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-mono font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
                       placeholder="cth: 1000000"
                     />
                   </div>
@@ -544,15 +529,15 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
                   <button
                     type="button"
                     onClick={() => setIsAddingGoal(false)}
-                    className="flex-1 neo-btn bg-neutral-100 hover:bg-neutral-200 py-2.5 text-xs font-black text-neutral-800 cursor-pointer"
+                    className="flex-1 py-2.5 bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] text-xs font-semibold text-[var(--color-text-secondary)] rounded-xl cursor-pointer transition-colors"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 neo-btn bg-[var(--color-income)] hover:bg-emerald-400 py-2.5 text-xs font-black text-neutral-900 cursor-pointer"
+                    className="flex-1 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-colors"
                   >
-                    Simpan Target Impian
+                    Simpan Target
                   </button>
                 </div>
               </form>
@@ -561,31 +546,31 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
 
           {/* Selected Goal Details */}
           {selectedGoal && (
-            <div className="space-y-4 animate-fade-in neo-card">
+            <div className="space-y-4 animate-fade-in">
               <button
                 onClick={() => setSelectedGoal(null)}
-                className="neo-btn bg-neutral-100 hover:bg-neutral-200 py-1.5 px-3 text-xs font-black flex items-center gap-1 cursor-pointer"
+                className="py-1.5 px-3 bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs font-bold text-[var(--color-text-secondary)] flex items-center gap-1 cursor-pointer transition-colors"
               >
                 ← Kembali ke Daftar Target
               </button>
 
-              <div className="bg-white p-5 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-4 relative">
+              <div className="bg-white p-5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-4 relative">
                 {selectedGoal.photo && (
-                  <div className="w-full h-40 rounded-lg neo-border overflow-hidden mb-2">
+                  <div className="w-full h-44 rounded-xl border border-[var(--color-border)] overflow-hidden mb-2 bg-[var(--color-bg)]">
                     <img src={selectedGoal.photo} alt={selectedGoal.title} className="w-full h-full object-cover" />
                   </div>
                 )}
 
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-lg font-black tracking-tight">{selectedGoal.title}</h3>
-                    <p className="text-xs font-mono font-bold text-neutral-400 mt-0.5">
+                    <h3 className="text-base font-bold text-[var(--color-text-primary)] tracking-tight">{selectedGoal.title}</h3>
+                    <p className="text-xs font-mono font-semibold text-[var(--color-text-secondary)] mt-0.5">
                       Target Total: {formatRupiah(selectedGoal.targetAmount)}
                     </p>
                   </div>
                   <button
                     onClick={() => handleDeleteGoal(selectedGoal.id)}
-                    className="p-2 text-neutral-400 hover:text-rose-500 hover:bg-rose-50 rounded neo-border border-transparent hover:border-rose-500 transition-colors cursor-pointer"
+                    className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-light)] rounded-lg transition-colors cursor-pointer"
                     title="Hapus Target"
                   >
                     <Trash2 size={16} />
@@ -596,15 +581,15 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
                   const percent = Math.min(Math.round((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100), 100);
                   return (
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center text-xs font-bold font-mono">
-                        <span className="text-neutral-600">Terkumpul: {formatRupiah(selectedGoal.currentAmount)}</span>
-                        <span className="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-black">
-                          {percent}% Selesai
+                      <div className="flex justify-between items-center text-xs font-semibold font-mono">
+                        <span className="text-[var(--color-text-secondary)]">Terkumpul: {formatRupiah(selectedGoal.currentAmount)}</span>
+                        <span className="bg-[var(--color-income-light)] text-[var(--color-income)] border border-[var(--color-income-border)] px-2 py-0.5 rounded-md text-[10px] font-bold">
+                          {percent}% Terpenuhi
                         </span>
                       </div>
-                      <div className="w-full h-4 bg-neutral-100 neo-border rounded-lg overflow-hidden relative">
+                      <div className="w-full h-3 bg-[var(--color-bg)] rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-emerald-400 relative transition-all duration-500"
+                          className="h-full bg-[var(--color-secondary)] rounded-full transition-all duration-500"
                           style={{ width: `${percent}%` }}
                         />
                       </div>
@@ -614,73 +599,73 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
               </div>
 
               {/* Add / Subtract Dana Transaction Form */}
-              <div className="bg-white p-5 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-3">
-                <span className="text-xs font-extrabold uppercase text-neutral-500 block">
-                  Mutasi Dana Keuangan Target
+              <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3">
+                <span className="text-xs font-bold uppercase text-[var(--color-text-secondary)] tracking-wider block">
+                  Mutasi Dana Target
                 </span>
 
                 <form onSubmit={handleAddGoalLog} className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 p-1 bg-neutral-100 neo-border rounded-lg">
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl">
                     <button
                       type="button"
                       onClick={() => setLogType('add')}
-                      className={`py-2 text-xs font-extrabold rounded-md border cursor-pointer transition-all ${
+                      className={`py-2 text-xs font-bold rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1 ${
                         logType === 'add'
-                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 neo-shadow-xs'
-                          : 'border-transparent text-neutral-500'
+                          ? 'bg-[var(--color-income)] text-white shadow-xs'
+                          : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
                       }`}
                     >
-                      <ArrowUpRight size={13} className="inline mr-1" /> Tambah Simpanan
+                      <ArrowUpRight size={14} /> Tambah Simpanan
                     </button>
                     <button
                       type="button"
                       onClick={() => setLogType('subtract')}
-                      className={`py-2 text-xs font-extrabold rounded-md border cursor-pointer transition-all ${
+                      className={`py-2 text-xs font-bold rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1 ${
                         logType === 'subtract'
-                          ? 'bg-rose-100 text-rose-800 border-rose-300 neo-shadow-xs'
-                          : 'border-transparent text-neutral-500'
+                          ? 'bg-[var(--color-danger)] text-white shadow-xs'
+                          : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
                       }`}
                     >
-                      <ArrowDownLeft size={13} className="inline mr-1" /> Tarik Dana
+                      <ArrowDownLeft size={14} /> Tarik Dana
                     </button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black text-neutral-400 uppercase">Jumlah Nominal</label>
+                      <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Jumlah Nominal</label>
                       <input
                         type="number"
                         value={logAmount}
                         onChange={e => setLogAmount(e.target.value)}
-                        className="w-full text-xs p-2.5 bg-neutral-50 neo-border rounded-lg font-mono font-bold focus:outline-none"
+                        className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-mono font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
                         placeholder="cth: 500000"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black text-neutral-400 uppercase">Tanggal Mutasi</label>
+                      <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Tanggal Mutasi</label>
                       <input
                         type="date"
                         value={logDate}
                         onChange={e => setLogDate(e.target.value)}
-                        className="w-full text-xs p-2.5 bg-neutral-50 neo-border rounded-lg font-mono font-bold focus:outline-none"
+                        className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-mono font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-neutral-400 uppercase">Catatan Mutasi</label>
+                    <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Catatan Mutasi</label>
                     <input
                       type="text"
                       value={logNote}
                       onChange={e => setLogNote(e.target.value)}
-                      className="w-full text-xs p-2.5 bg-neutral-50 neo-border rounded-lg font-bold focus:outline-none"
+                      className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
                       placeholder="cth: Tabungan sisa bulanan"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full neo-btn bg-[var(--color-accent)] hover:bg-yellow-400 py-2.5 text-xs font-black flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors"
                   >
                     Catat Mutasi Target
                   </button>
@@ -689,13 +674,13 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
 
               {/* Goal Logs */}
               <div className="space-y-2.5">
-                <span className="text-xs font-extrabold uppercase text-neutral-500 block">
-                  Aktivitas Riwayat Dana Target
+                <span className="text-xs font-bold uppercase text-[var(--color-text-secondary)] tracking-wider block px-1">
+                  Riwayat Mutasi Dana
                 </span>
 
                 {selectedGoal.logs.length === 0 ? (
-                  <div className="bg-white p-6 text-center neo-border rounded-[var(--radius-md)] neo-shadow-sm">
-                    <p className="text-xs font-bold text-neutral-400">Belum ada mutasi keuangan pada target ini.</p>
+                  <div className="bg-white p-6 text-center border border-[var(--color-border)] rounded-2xl shadow-xs">
+                    <p className="text-xs font-medium text-[var(--color-text-muted)]">Belum ada mutasi keuangan pada target ini.</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -704,22 +689,22 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
                       return (
                         <div
                           key={log.id}
-                          className="bg-white p-3.5 neo-border rounded-[var(--radius-md)] neo-shadow-sm flex justify-between items-center"
+                          className="bg-white p-3 border border-[var(--color-border)] rounded-xl shadow-xs flex justify-between items-center"
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded border-2 flex items-center justify-center ${
-                              isAdd ? 'bg-emerald-50 border-emerald-300 text-emerald-600' : 'bg-rose-50 border-rose-300 text-rose-600'
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                              isAdd ? 'bg-[var(--color-income-light)] text-[var(--color-income)]' : 'bg-[var(--color-danger-light)] text-[var(--color-danger)]'
                             }`}>
                               {isAdd ? <ArrowUpRight size={16} /> : <ArrowDownLeft size={16} />}
                             </div>
                             <div>
-                              <h4 className="text-xs font-extrabold">{log.note}</h4>
-                              <p className="text-[9px] font-mono text-neutral-400 font-bold">
+                              <h4 className="text-xs font-bold text-[var(--color-text-primary)]">{log.note}</h4>
+                              <p className="text-[10px] text-[var(--color-text-muted)] font-medium">
                                 {parseLocalDate(log.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                               </p>
                             </div>
                           </div>
-                          <span className={`text-xs font-black font-mono ${isAdd ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          <span className={`text-xs font-bold font-mono ${isAdd ? 'text-[var(--color-income)]' : 'text-[var(--color-danger)]'}`}>
                             {isAdd ? '+' : '-'}{formatRupiah(log.amount)}
                           </span>
                         </div>
@@ -733,46 +718,46 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
 
           {/* Goals List */}
           {!selectedGoal && !isAddingGoal && (
-            <div className="space-y-3 neo-card">
+            <div className="space-y-3">
               {goals.length === 0 ? (
-                <div className="bg-white p-10 text-center neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-2">
-                  <p className="text-xs font-bold text-neutral-400">Belum ada target impian yang dibuat.</p>
-                  <p className="text-[10px] text-neutral-400 font-bold">Rencanakan target pertamamu seperti beli hp baru, laptop, atau liburan!</p>
+                <div className="bg-white p-8 text-center border border-[var(--color-border)] rounded-2xl shadow-xs space-y-1.5">
+                  <p className="text-xs font-semibold text-[var(--color-text-primary)]">Belum ada target impian.</p>
+                  <p className="text-[11px] text-[var(--color-text-secondary)]">Rencanakan target pertamamu seperti beli gadget, dana darurat, atau liburan!</p>
                 </div>
               ) : (
-                <div className="grid gap-3">
+                <div className="grid gap-2.5">
                   {goals.map(goal => {
                     const percent = Math.min(Math.round((goal.currentAmount / goal.targetAmount) * 100), 100);
                     return (
                       <div
                         key={goal.id}
                         onClick={() => setSelectedGoal(goal)}
-                        className="bg-white p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--color-accent)] active:translate-x-[1px] active:translate-y-[1px] transition-transform"
+                        className="bg-white p-4 border border-[var(--color-border)] rounded-2xl shadow-xs flex items-center justify-between gap-3 cursor-pointer hover:border-[var(--color-border-hover)] hover:shadow-sm transition-all"
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {goal.photo ? (
-                            <div className="w-12 h-12 rounded-lg border-2 border-neutral-900 overflow-hidden shrink-0">
+                            <div className="w-12 h-12 rounded-xl border border-[var(--color-border)] overflow-hidden shrink-0 bg-[var(--color-bg)]">
                               <img src={goal.photo} alt={goal.title} className="w-full h-full object-cover" />
                             </div>
                           ) : (
-                            <div className="w-12 h-12 rounded-lg neo-border bg-amber-50 flex items-center justify-center shrink-0">
-                              <Target size={20} className="text-amber-500" />
+                            <div className="w-12 h-12 rounded-xl bg-[var(--color-secondary-light)] text-[var(--color-secondary)] flex items-center justify-center shrink-0">
+                              <Target size={20} />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-xs font-extrabold truncate">{goal.title}</h4>
-                            <div className="w-full h-2.5 bg-neutral-100 border border-neutral-900 rounded-full overflow-hidden mt-1.5 relative">
+                            <h4 className="text-xs font-bold text-[var(--color-text-primary)] truncate">{goal.title}</h4>
+                            <div className="w-full h-2 bg-[var(--color-bg)] rounded-full overflow-hidden mt-2">
                               <div
-                                className="h-full bg-emerald-400"
+                                className="h-full bg-[var(--color-secondary)] rounded-full transition-all duration-500"
                                 style={{ width: `${percent}%` }}
                               />
                             </div>
-                            <p className="text-[9px] font-mono text-neutral-400 font-bold mt-1.5">
+                            <p className="text-[10px] font-mono text-[var(--color-text-secondary)] font-medium mt-1">
                               {formatRupiah(goal.currentAmount)} / {formatRupiah(goal.targetAmount)} ({percent}%)
                             </p>
                           </div>
                         </div>
-                        <ChevronRight size={18} className="text-neutral-400 shrink-0" />
+                        <ChevronRight size={18} className="text-[var(--color-text-muted)] shrink-0" />
                       </div>
                     );
                   })}
@@ -786,45 +771,45 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
       {/* ======================================================== */}
       {/* TAB B: BUDGETING BULANAN DINAMIS */}
       {/* ======================================================== */}
-        {activePageTab === 'budgeting' && (
-          <div className="space-y-5 animate-fade-in">
-            {/* Card 1: Header Periode Budget */}
-            <div className="bg-white p-4.5 neo-border rounded-[var(--radius-md)] neo-shadow-sm flex flex-col gap-3 neo-card">
-              <div>
-                <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block">Periode Budget</span>
-                <div className="flex items-center gap-2 mt-1">
-                  <select
-                    value={selectedMonth}
-                    onChange={e => setSelectedMonth(Number(e.target.value))}
-                    className="flex-1 neo-border rounded-lg px-3 py-2 text-xs font-black bg-white cursor-pointer focus:bg-yellow-50"
-                  >
-                    {MONTH_NAMES.map((m, idx) => (
-                      <option key={idx} value={idx}>{m}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={selectedYear}
-                    onChange={e => setSelectedYear(Number(e.target.value))}
-                    className="flex-1 neo-border rounded-lg px-3 py-2 text-xs font-black bg-white cursor-pointer focus:bg-yellow-50"
-                  >
-                    {yearsList.map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                </div>
+      {activePageTab === 'budgeting' && (
+        <div className="space-y-4 animate-fade-in">
+          {/* Card 1: Header Periode Budget */}
+          <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs flex flex-col gap-3">
+            <div>
+              <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider block">Periode Budget</span>
+              <div className="flex items-center gap-2 mt-1.5">
+                <select
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(Number(e.target.value))}
+                  className="flex-1 border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs font-bold text-[var(--color-text-primary)] bg-white cursor-pointer focus:outline-none focus:border-[var(--color-accent)]"
+                >
+                  {MONTH_NAMES.map((m, idx) => (
+                    <option key={idx} value={idx}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={e => setSelectedYear(Number(e.target.value))}
+                  className="flex-1 border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs font-bold text-[var(--color-text-primary)] bg-white cursor-pointer focus:outline-none focus:border-[var(--color-accent)]"
+                >
+                  {yearsList.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
               </div>
-
-              <button
-                onClick={() => handleOpenBudgetModal()}
-                className="w-full neo-btn bg-[var(--color-accent)] hover:bg-yellow-400 px-3.5 py-2.5 text-xs font-black flex justify-center items-center gap-1.5 cursor-pointer"
-              >
-                <Plus size={15} /> Atur Budget
-              </button>
             </div>
 
-          {/* Card 2: Quick Presets (Strictly from available expense categories) */}
-          <div className="bg-white p-4.5 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-2.5 neo-card">
-            <span className="text-[10px] font-black uppercase text-neutral-400 tracking-wider block">
+            <button
+              onClick={() => handleOpenBudgetModal()}
+              className="w-full py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-xs font-bold rounded-xl flex justify-center items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+            >
+              <Plus size={15} /> Atur Budget Baru
+            </button>
+          </div>
+
+          {/* Card 2: Quick Presets */}
+          <div className="bg-white p-4 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-2">
+            <span className="text-[10px] font-bold uppercase text-[var(--color-text-secondary)] tracking-wider block">
               Atur Cepat Kategori Pengeluaran
             </span>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -832,7 +817,7 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
                 <button
                   key={catName}
                   onClick={() => handleAddPresetBudget(catName)}
-                  className="neo-btn bg-amber-50 hover:bg-amber-100 px-3 py-1.5 text-[11px] font-black flex items-center gap-1.5 shrink-0 cursor-pointer text-neutral-900"
+                  className="bg-[var(--color-bg)] hover:bg-neutral-200/80 border border-[var(--color-border)] px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--color-text-primary)] flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors"
                 >
                   <Plus size={12} /> {catName}
                 </button>
@@ -841,53 +826,53 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
           </div>
 
           {/* Card 3: Overall Monthly Budget Summary */}
-          <div className="bg-white p-5 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-4 neo-card">
+          <div className="bg-white p-5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 flex items-center gap-1.5">
-                <Wallet size={15} className="text-amber-500" /> Ringkasan Budget {MONTH_NAMES[selectedMonth]} {selectedYear}
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)] flex items-center gap-1.5">
+                <Wallet size={15} className="text-[var(--color-secondary)]" /> Ringkasan {MONTH_NAMES[selectedMonth]} {selectedYear}
               </span>
-              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded neo-border ${
-                budgetSummary.percent > 100 ? 'bg-rose-100 text-rose-800 border-rose-300' :
-                budgetSummary.percent >= 75 ? 'bg-amber-100 text-amber-800 border-amber-300' :
-                'bg-emerald-100 text-emerald-800 border-emerald-300'
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                budgetSummary.percent > 100 ? 'badge-expense' :
+                budgetSummary.percent >= 75 ? 'badge-warning' :
+                'badge-income'
               }`}>
                 {budgetSummary.percent}% Terpakai
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center py-2.5 bg-neutral-50 neo-border rounded-lg">
+            <div className="grid grid-cols-3 gap-2 text-center py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl">
               <div>
-                <span className="text-[9px] font-black text-neutral-400 uppercase block">Total Target</span>
-                <span className="text-xs font-black font-mono text-neutral-900">
+                <span className="text-[9px] font-bold text-[var(--color-text-muted)] uppercase block">Total Target</span>
+                <span className="text-xs font-bold font-mono text-[var(--color-text-primary)]">
                   {formatRupiah(budgetSummary.totalTarget)}
                 </span>
               </div>
-              <div className="border-x border-neutral-200">
-                <span className="text-[9px] font-black text-neutral-400 uppercase block">Terpakai</span>
-                <span className="text-xs font-black font-mono text-rose-600">
+              <div className="border-x border-[var(--color-border)]">
+                <span className="text-[9px] font-bold text-[var(--color-text-muted)] uppercase block">Terpakai</span>
+                <span className="text-xs font-bold font-mono text-[var(--color-danger)]">
                   {formatRupiah(budgetSummary.totalSpent)}
                 </span>
               </div>
               <div>
-                <span className="text-[9px] font-black text-neutral-400 uppercase block">Sisa Budget</span>
-                <span className={`text-xs font-black font-mono ${budgetSummary.remaining < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                <span className="text-[9px] font-bold text-[var(--color-text-muted)] uppercase block">Sisa Budget</span>
+                <span className={`text-xs font-bold font-mono ${budgetSummary.remaining < 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-income)]'}`}>
                   {formatRupiah(budgetSummary.remaining)}
                 </span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <div className="w-full h-3.5 bg-neutral-100 neo-border rounded-full overflow-hidden relative">
+              <div className="w-full h-2.5 bg-[var(--color-bg)] rounded-full overflow-hidden">
                 <div
-                  className={`h-full transition-all duration-500 ${
-                    budgetSummary.percent > 100 ? 'bg-rose-500' :
-                    budgetSummary.percent >= 75 ? 'bg-amber-400' :
-                    'bg-emerald-400'
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    budgetSummary.percent > 100 ? 'bg-[var(--color-danger)]' :
+                    budgetSummary.percent >= 75 ? 'bg-[var(--color-warning)]' :
+                    'bg-[var(--color-income)]'
                   }`}
                   style={{ width: `${Math.min(budgetSummary.percent, 100)}%` }}
                 />
               </div>
-              <div className="flex justify-between items-center text-[9px] font-bold text-neutral-400">
+              <div className="flex justify-between items-center text-[10px] font-medium text-[var(--color-text-muted)]">
                 <span>0%</span>
                 <span>{budgetSummary.percent > 100 ? 'Overbudget!' : `${budgetSummary.percent}% Terpakai`}</span>
                 <span>100%</span>
@@ -896,87 +881,87 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
           </div>
 
           {/* Card 4: List of Category Budgets */}
-          <div className="bg-white p-5 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-4 neo-card">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 block">
-              Daftar Kategori Budget Bulanan
+          <div className="bg-white p-5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)] block">
+              Daftar Kategori Budget
             </span>
 
             {budgets.length === 0 ? (
-              <div className="bg-neutral-50 p-8 text-center neo-border rounded-lg space-y-2">
-                <p className="text-xs font-bold text-neutral-400">Belum ada alokasi budget untuk bulan ini.</p>
-                <p className="text-[10px] text-neutral-400 font-bold">Klik "Atur Budget" di atas untuk membatasi pengeluaran bulananmu!</p>
+              <div className="bg-[var(--color-bg)] p-6 text-center border border-[var(--color-border)] rounded-xl space-y-1.5">
+                <p className="text-xs font-semibold text-[var(--color-text-primary)]">Belum ada alokasi budget untuk bulan ini.</p>
+                <p className="text-[11px] text-[var(--color-text-secondary)]">Klik "Atur Budget Baru" di atas untuk membatasi pengeluaranmu!</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {budgets.map(b => {
                   const spent = categorySpentMap[b.category] || 0;
                   const percent = b.targetAmount > 0 ? Math.round((spent / b.targetAmount) * 100) : 0;
                   const remaining = b.targetAmount - spent;
 
-                  let badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                  let badgeColor = 'badge-income';
                   let badgeText = 'Aman';
-                  let barColor = 'bg-emerald-400';
+                  let barColor = 'bg-[var(--color-income)]';
 
                   if (percent > 100) {
-                    badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                    badgeColor = 'badge-expense';
                     badgeText = 'Overbudget!';
-                    barColor = 'bg-rose-500';
+                    barColor = 'bg-[var(--color-danger)]';
                   } else if (percent >= 75) {
-                    badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+                    badgeColor = 'badge-warning';
                     badgeText = 'Waspada';
-                    barColor = 'bg-amber-400';
+                    barColor = 'bg-[var(--color-warning)]';
                   }
 
                   return (
                     <div
                       key={b.id}
-                      className="bg-white p-4 neo-border rounded-lg neo-shadow-xs space-y-3 border-l-4 border-l-neutral-900"
+                      className="bg-white p-3.5 border border-[var(--color-border)] rounded-xl shadow-xs space-y-2.5"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-amber-50 neo-border flex items-center justify-center text-neutral-800 shrink-0">
-                            <CategoryIcon category={b.category} size={18} />
+                          <div className="w-9 h-9 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-primary)] shrink-0">
+                            <CategoryIcon category={b.category} size={16} />
                           </div>
                           <div>
-                            <h4 className="text-xs font-black text-neutral-900">{b.category}</h4>
-                            <p className="text-[10px] font-mono font-bold text-neutral-400 mt-0.5">
+                            <h4 className="text-xs font-bold text-[var(--color-text-primary)]">{b.category}</h4>
+                            <p className="text-[10px] font-mono text-[var(--color-text-muted)] font-medium mt-0.5">
                               Batas: {formatRupiah(b.targetAmount)}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${badgeColor}`}>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${badgeColor}`}>
                             {badgeText}
                           </span>
                           <button
                             onClick={() => handleOpenBudgetModal(b)}
-                            className="p-1.5 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded border border-transparent hover:border-neutral-300 cursor-pointer"
+                            className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg)] rounded-lg transition-colors cursor-pointer"
                             title="Edit Budget"
                           >
-                            <Edit2 size={14} />
+                            <Edit2 size={13} />
                           </button>
                           <button
                             onClick={() => handleDeleteBudget(b.id)}
-                            className="p-1.5 text-neutral-400 hover:text-rose-500 hover:bg-rose-50 rounded border border-transparent hover:border-rose-300 cursor-pointer"
+                            className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-light)] rounded-lg transition-colors cursor-pointer"
                             title="Hapus Budget"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={13} />
                           </button>
                         </div>
                       </div>
 
                       {/* Progress Bar & Real-time Integration */}
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between items-center text-[10px] font-bold font-mono">
-                          <span className="text-neutral-500">Terpakai: {formatRupiah(spent)}</span>
-                          <span className={remaining < 0 ? 'text-rose-600 font-black' : 'text-emerald-600 font-black'}>
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center text-[10px] font-medium font-mono">
+                          <span className="text-[var(--color-text-secondary)]">Terpakai: {formatRupiah(spent)}</span>
+                          <span className={remaining < 0 ? 'text-[var(--color-danger)] font-bold' : 'text-[var(--color-income)] font-bold'}>
                             {remaining < 0 ? `Lebih ${formatRupiah(Math.abs(remaining))}` : `Sisa ${formatRupiah(remaining)}`}
                           </span>
                         </div>
-                        <div className="w-full h-3 bg-neutral-100 neo-border rounded-md overflow-hidden">
+                        <div className="w-full h-2 bg-[var(--color-bg)] rounded-full overflow-hidden">
                           <div
-                            className={`h-full transition-all duration-500 ${barColor}`}
+                            className={`h-full rounded-full transition-all duration-500 ${barColor}`}
                             style={{ width: `${Math.min(percent, 100)}%` }}
                           />
                         </div>
@@ -991,49 +976,47 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
       )}
 
       {/* ======================================================== */}
-      {/* MODAL EDIT / TAMBAH BUDGET (Strictly integrated with Profile categories) */}
+      {/* MODAL EDIT / TAMBAH BUDGET */}
       {/* ======================================================== */}
       {isBudgetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white w-full max-w-xs p-5 neo-border rounded-xl neo-shadow-lg space-y-4 relative">
-            <div className="flex justify-between items-center border-b border-neutral-200 pb-2.5">
-              <h3 className="text-sm font-black text-neutral-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white w-full max-w-xs p-5 border border-[var(--color-border)] rounded-2xl shadow-xl space-y-4 relative">
+            <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-2.5">
+              <h3 className="text-sm font-bold text-[var(--color-text-primary)]">
                 {editingBudgetId ? 'Edit Budget Kategori' : 'Tambah Budget Kategori'}
               </h3>
               <button
                 onClick={() => setIsBudgetModalOpen(false)}
-                className="text-neutral-400 hover:text-neutral-900 font-bold text-sm cursor-pointer"
+                className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] text-sm cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleSaveBudgetForm} className="space-y-3.5">
-              {/* Category Select strictly from Profile categories */}
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-neutral-400 uppercase">Pilih Kategori Pengeluaran</label>
+                <label className="text-[10px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Kategori Pengeluaran</label>
                 <select
                   value={budgetCatSelect}
                   onChange={e => setBudgetCatSelect(e.target.value)}
-                  className="w-full text-xs p-3 bg-neutral-50 neo-border rounded-lg font-bold focus:outline-none focus:bg-white cursor-pointer"
+                  className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] cursor-pointer"
                 >
                   {availableCategories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-                <p className="text-[9px] text-neutral-400 font-bold mt-1">
-                  * Kategori diambil dari halaman Profil. Tambah kategori baru di Profil jika diperlukan.
+                <p className="text-[10px] text-[var(--color-text-muted)] mt-1">
+                  * Kategori dapat dikelola di halaman Profil.
                 </p>
               </div>
 
-              {/* Limit Input */}
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-neutral-400 uppercase">Batas Budget Bulanan (Rp)</label>
+                <label className="text-[10px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Batas Budget Bulanan (Rp)</label>
                 <input
                   type="number"
                   value={budgetLimitInput}
                   onChange={e => setBudgetLimitInput(e.target.value)}
-                  className="w-full text-xs p-3 bg-neutral-50 neo-border rounded-lg font-mono font-bold focus:outline-none focus:bg-white"
+                  className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-mono text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
                   placeholder="cth: 1500000"
                   required
                 />
@@ -1043,13 +1026,13 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
                 <button
                   type="button"
                   onClick={() => setIsBudgetModalOpen(false)}
-                  className="w-1/2 neo-btn bg-neutral-100 hover:bg-neutral-200 py-2.5 text-xs font-black cursor-pointer"
+                  className="w-1/2 py-2.5 bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] text-xs font-semibold text-[var(--color-text-secondary)] rounded-xl cursor-pointer transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 neo-btn bg-[var(--color-accent)] hover:bg-yellow-400 py-2.5 text-xs font-black cursor-pointer"
+                  className="w-1/2 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-colors"
                 >
                   Simpan Budget
                 </button>
@@ -1060,24 +1043,24 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
       )}
 
       {/* ======================================================== */}
-      {/* CUSTOM CONFIRMATION MODAL (Replaces window.confirm) */}
+      {/* CUSTOM CONFIRMATION MODAL */}
       {/* ======================================================== */}
       {confirmModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white w-full max-w-xs p-5 neo-border rounded-xl neo-shadow-lg space-y-4 text-center">
-            <div className="inline-flex p-3 bg-rose-100 rounded-full neo-border">
-              <AlertTriangle size={28} className="text-rose-600 animate-bounce" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white w-full max-w-xs p-5 border border-[var(--color-border)] rounded-2xl shadow-xl space-y-3.5 text-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-[var(--color-danger-light)] text-[var(--color-danger)] flex items-center justify-center">
+              <AlertTriangle size={24} />
             </div>
             <div className="space-y-1">
-              <h3 className="text-md font-black text-neutral-900">{confirmModal.title}</h3>
-              <p className="text-xs text-neutral-500 font-bold leading-relaxed">
+              <h3 className="text-sm font-bold text-[var(--color-text-primary)]">{confirmModal.title}</h3>
+              <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                 {confirmModal.message}
               </p>
             </div>
             <div className="flex gap-2 pt-1">
               <button
                 onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-                className="w-1/2 neo-btn bg-neutral-100 hover:bg-neutral-200 py-2.5 text-xs font-black cursor-pointer"
+                className="w-1/2 py-2.5 bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] text-xs font-semibold text-[var(--color-text-secondary)] rounded-xl cursor-pointer transition-colors"
               >
                 Batal
               </button>
@@ -1086,7 +1069,7 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
                   confirmModal.onConfirm();
                   setConfirmModal({ ...confirmModal, isOpen: false });
                 }}
-                className="w-1/2 neo-btn bg-rose-500 hover:bg-rose-600 text-white py-2.5 text-xs font-black cursor-pointer"
+                className="w-1/2 py-2.5 bg-[var(--color-danger)] hover:bg-rose-700 text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-colors"
               >
                 Ya, Hapus
               </button>
@@ -1096,23 +1079,23 @@ export default function Goals({ transactions = [], settings, onGoalUpdated }: Go
       )}
 
       {/* ======================================================== */}
-      {/* CUSTOM NOTICE MODAL (Replaces window.alert) */}
+      {/* CUSTOM NOTICE MODAL */}
       {/* ======================================================== */}
       {noticeModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white w-full max-w-xs p-5 neo-border rounded-xl neo-shadow-lg space-y-4 text-center">
-            <div className="inline-flex p-3 bg-amber-100 rounded-full neo-border">
-              <Info size={28} className="text-amber-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white w-full max-w-xs p-5 border border-[var(--color-border)] rounded-2xl shadow-xl space-y-3.5 text-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center">
+              <Info size={24} />
             </div>
             <div className="space-y-1">
-              <h3 className="text-md font-black text-neutral-900">{noticeModal.title}</h3>
-              <p className="text-xs text-neutral-500 font-bold leading-relaxed">
+              <h3 className="text-sm font-bold text-[var(--color-text-primary)]">{noticeModal.title}</h3>
+              <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                 {noticeModal.message}
               </p>
             </div>
             <button
               onClick={() => setNoticeModal({ ...noticeModal, isOpen: false })}
-              className="w-full neo-btn bg-[var(--color-accent)] hover:bg-yellow-400 py-2.5 text-xs font-black cursor-pointer"
+              className="w-full py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-colors"
             >
               Mengerti
             </button>

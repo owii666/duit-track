@@ -17,15 +17,10 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
 
-  // GSAP Entrance Animations
   useEffect(() => {
     gsap.fromTo('#stats-filter',
-      { opacity: 0, y: -10 },
-      { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
-    );
-    gsap.fromTo('.neo-card, .stats-card',
-      { opacity: 0, y: 15 },
-      { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out', delay: 0.1 }
+      { opacity: 0, y: -8 },
+      { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
     );
   }, [selectedMonth, selectedYear]);
 
@@ -34,7 +29,6 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
     const currentYear = selectedYear;
     const currentMonth = selectedMonth;
 
-    // Last month calculation
     const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
     const lastMonthYear = lastMonthDate.getFullYear();
     const lastMonthNum = lastMonthDate.getMonth();
@@ -81,18 +75,16 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
       }
     });
 
-    // Sort descending
     return Object.entries(groups)
       .map(([name, amount]) => ({
         name,
         amount,
         percentage: totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0
       }))
-      .filter(item => item.amount > 0) // Filter out 0-amount entries/attendance check-ins
+      .filter(item => item.amount > 0)
       .sort((a, b) => b.amount - a.amount);
   }, [transactions, selectedMonth, selectedYear]);
 
-  // Total expense for percentage calculations
   const totalExpenseThisMonth = useMemo(() => {
     return categoryExpenses.reduce((sum, item) => sum + item.amount, 0);
   }, [categoryExpenses]);
@@ -104,49 +96,46 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
     const currentMonthLabel = MONTH_NAMES[selectedMonth];
     const lastMonthLabel = MONTH_NAMES[summaries.lastMonthNum];
 
-    // Insight: Expense comparison
     if (last.expense > 0) {
       const diffPercent = Math.round(((current.expense - last.expense) / last.expense) * 100);
       if (diffPercent > 10) {
         list.push({
           type: 'warning',
-          text: `Awas! Belanja kamu di bulan ${currentMonthLabel} naik ${diffPercent}% dibanding bulan ${lastMonthLabel}. Saatnya dikurangi.`
+          text: `Perhatian: Pengeluaran bulan ${currentMonthLabel} naik ${diffPercent}% dibanding bulan ${lastMonthLabel}. Kendalikan belanja yang kurang mendesak.`
         });
       } else if (diffPercent < -10) {
         list.push({
           type: 'success',
-          text: `Hebat! Belanja bulan ${currentMonthLabel} turun ${Math.abs(diffPercent)}% dibanding bulan ${lastMonthLabel}. Disiplinmu luar biasa!`
+          text: `Bagus sekali! Pengeluaran bulan ${currentMonthLabel} hemat ${Math.abs(diffPercent)}% dibanding bulan ${lastMonthLabel}. Terus pertahankan pola ini!`
         });
       } else {
         list.push({
           type: 'info',
-          text: `Belanja kamu di bulan ${currentMonthLabel} cukup stabil dibanding bulan ${lastMonthLabel}. Pertahankan kestabilan anggaranmu!`
+          text: `Pengeluaran bulan ${currentMonthLabel} relatif stabil dibanding bulan ${lastMonthLabel}. Alur keuangan berjalan terkendali.`
         });
       }
     } else {
       list.push({
         type: 'info',
-        text: `Belum ada data bulan ${lastMonthLabel} untuk perbandingan. Terus mencatat transaksi ya!`
+        text: `Belum ada riwayat di bulan ${lastMonthLabel} untuk pembanding. Catatan baru akan makin lengkap seiring waktu.`
       });
     }
 
-    // Insight: Dominant category
     if (categoryExpenses.length > 0) {
       const topCat = categoryExpenses[0];
       if (topCat.percentage >= 35) {
         list.push({
           type: 'danger',
-          text: `Porsi belanja untuk '${topCat.name}' di bulan ${currentMonthLabel} sangat tinggi (${topCat.percentage}% dari total pengeluaran). Coba cari alternatif hemat.`
+          text: `Porsi belanja untuk '${topCat.name}' mendominasi ${topCat.percentage}% dari total pengeluaran bulan ini. Evaluasi apakah bisa dihemat.`
         });
       } else {
         list.push({
           type: 'success',
-          text: `Distribusi pengeluaranmu cukup sehat. Belanja terbesarmu di bulan ${currentMonthLabel} ada di kategori '${topCat.name}'.`
+          text: `Distribusi belanja cukup seimbang. Kategori terbesar bulan ini adalah '${topCat.name}' sebesar ${topCat.percentage}%.`
         });
       }
     }
 
-    // Insight: Savings Rate
     const income = current.income;
     const saving = current.saving;
     if (income > 0) {
@@ -154,12 +143,12 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
       if (saveRate >= 20) {
         list.push({
           type: 'success',
-          text: `Rasio menabungmu di bulan ${currentMonthLabel} adalah ${saveRate}%, melampaui anjuran sehat (20%). Masa depanmu aman!`
+          text: `Rasio menabungmu mencapai ${saveRate}%, melampaui target ideal (20%). Fondasi keuanganmu semakin kuat!`
         });
       } else if (saveRate > 0) {
         list.push({
           type: 'warning',
-          text: `Rasio menabungmu di bulan ${currentMonthLabel} ${saveRate}% dari total pemasukan. Yuk coba genjot lagi ke target 20%!`
+          text: `Rasio menabung saat ini ${saveRate}% dari total pemasukan. Coba alokasikan lebih awal menuju target 20%.`
         });
       }
     }
@@ -167,104 +156,90 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
     return list;
   }, [summaries, categoryExpenses, selectedMonth]);
 
-  // Color mapper helper for top categories
+  // Color palette for top categories
   const getCategoryColor = (idx: number) => {
     const colors = [
-      'var(--color-expense)',
-      'var(--color-accent)',
-      'var(--color-saving)',
-      'var(--color-income)',
-      '#C084FC' // purple
+      '#1A434E',
+      '#C0504D',
+      '#285B63',
+      '#6B9A91',
+      '#C98A2B',
+      '#2E7D5B'
     ];
     return colors[idx % colors.length];
   };
 
-  // Render comparative bar chart using plain SVG
+  // Render comparative bar chart using clean SVG
   const renderBarChart = () => {
     const maxVal = Math.max(
       summaries.current.income,
       summaries.current.expense,
       summaries.last.income,
       summaries.last.expense,
-      1000000 // default minimum scale
+      1000000
     );
 
-    const scale = (val: number) => (val / maxVal) * 130; // height inside 160px container
+    const scale = (val: number) => (val / maxVal) * 120;
     const lastMonthLabel = `${MONTH_NAMES[summaries.lastMonthNum].slice(0, 3)} '${String(summaries.lastMonthYear).slice(-2)}`;
     const currentMonthLabel = `${MONTH_NAMES[selectedMonth].slice(0, 3)} '${String(selectedYear).slice(-2)}`;
 
     return (
-      <svg className="w-full h-44 border-b-2 border-neutral-900" viewBox="0 0 320 180">
+      <svg className="w-full h-44" viewBox="0 0 320 180">
         {/* Grid lines */}
-        <line x1="20" y1="20" x2="300" y2="20" stroke="#E5E7EB" strokeDasharray="3" />
-        <line x1="20" y1="80" x2="300" y2="80" stroke="#E5E7EB" strokeDasharray="3" />
-        <line x1="20" y1="140" x2="300" y2="140" stroke="#E5E7EB" strokeDasharray="3" />
-
-        {/* Axis line */}
-        <line x1="20" y1="150" x2="300" y2="150" stroke="#171717" strokeWidth="2" />
+        <line x1="20" y1="30" x2="300" y2="30" stroke="#E4ECEA" strokeDasharray="3" />
+        <line x1="20" y1="85" x2="300" y2="85" stroke="#E4ECEA" strokeDasharray="3" />
+        <line x1="20" y1="140" x2="300" y2="140" stroke="#E4ECEA" strokeWidth="1" />
 
         {/* Last Month Bars */}
-        {/* Income */}
         <rect
-          x="45"
-          y={150 - scale(summaries.last.income)}
-          width="24"
+          x="50"
+          y={140 - scale(summaries.last.income)}
+          width="22"
           height={scale(summaries.last.income)}
-          fill="var(--color-income)"
-          opacity="0.6"
-          stroke="#171717"
-          strokeWidth="2.5"
-          rx="2"
+          fill="#2E7D5B"
+          opacity="0.45"
+          rx="4"
         />
-        {/* Expense */}
         <rect
-          x="75"
-          y={150 - scale(summaries.last.expense)}
-          width="24"
+          x="78"
+          y={140 - scale(summaries.last.expense)}
+          width="22"
           height={scale(summaries.last.expense)}
-          fill="var(--color-expense)"
-          opacity="0.6"
-          stroke="#171717"
-          strokeWidth="2.5"
-          rx="2"
+          fill="#C0504D"
+          opacity="0.45"
+          rx="4"
         />
 
         {/* This Month Bars */}
-        {/* Income */}
         <rect
-          x="185"
-          y={150 - scale(summaries.current.income)}
-          width="24"
+          x="190"
+          y={140 - scale(summaries.current.income)}
+          width="22"
           height={scale(summaries.current.income)}
-          fill="var(--color-income)"
-          stroke="#171717"
-          strokeWidth="2.5"
-          rx="2"
+          fill="#2E7D5B"
+          rx="4"
         />
-        {/* Expense */}
         <rect
-          x="215"
-          y={150 - scale(summaries.current.expense)}
-          width="24"
+          x="218"
+          y={140 - scale(summaries.current.expense)}
+          width="22"
           height={scale(summaries.current.expense)}
-          fill="var(--color-expense)"
-          stroke="#171717"
-          strokeWidth="2.5"
-          rx="2"
+          fill="#C0504D"
+          rx="4"
         />
 
         {/* Text Labels */}
-        <text x="72" y="168" fontSize="10" fontWeight="bold" textAnchor="middle" fill="#9CA3AF">{lastMonthLabel}</text>
-        <text x="212" y="168" fontSize="10" fontWeight="bold" textAnchor="middle" fill="#171717">{currentMonthLabel}</text>
+        <text x="75" y="160" fontSize="11" fontWeight="600" textAnchor="middle" fill="#718187">{lastMonthLabel}</text>
+        <text x="215" y="160" fontSize="11" fontWeight="700" textAnchor="middle" fill="#203238">{currentMonthLabel}</text>
       </svg>
     );
   };
 
-  // Render circular breakdown donut chart using simple customized SVG slices
+  // Render circular breakdown donut chart
   const renderDonutChart = () => {
     if (categoryExpenses.length === 0) {
       return (
-        <div className="text-center py-6 text-xs font-bold text-neutral-400">
+        <div className="text-center py-6 text-xs font-medium text-[var(--color-text-muted)]">
           Belum ada pengeluaran di periode ini.
         </div>
       );
@@ -273,14 +248,12 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
     let accumulatedPercent = 0;
 
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-around gap-5 pt-2">
+      <div className="flex flex-col sm:flex-row items-center justify-around gap-5 pt-1">
         {/* SVG Circle */}
         <div className="relative w-32 h-32 mx-auto sm:mx-0 shrink-0">
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-            {/* Base circle background */}
-            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#E5E7EB" strokeWidth="4" />
+            <circle cx="18" cy="18" r="15.915" fill="none" stroke="#E4ECEA" strokeWidth="4" />
 
-            {/* Slices */}
             {categoryExpenses.map((cat, idx) => {
               const dashArray = `${cat.percentage} ${100 - cat.percentage}`;
               const dashOffset = 100 - accumulatedPercent;
@@ -301,9 +274,9 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
               );
             })}
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full w-24 h-24 m-auto neo-border">
-            <span className="text-[9px] font-black uppercase text-neutral-400 tracking-wider">Total</span>
-            <span className="text-xs font-black font-mono text-neutral-900">{formatRupiah(totalExpenseThisMonth)}</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full w-22 h-22 m-auto border border-[var(--color-border)] shadow-xs">
+            <span className="text-[9px] font-bold uppercase text-[var(--color-text-muted)] tracking-wider">Total</span>
+            <span className="text-xs font-bold font-mono text-[var(--color-text-primary)] px-1 text-center truncate">{formatRupiah(totalExpenseThisMonth)}</span>
           </div>
         </div>
 
@@ -311,14 +284,14 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
         <div className="flex-1 space-y-1.5 w-full max-w-[220px] mx-auto sm:mx-0">
           {categoryExpenses.slice(0, 5).map((cat, idx) => (
             <div key={cat.name} className="flex justify-between items-center text-xs">
-              <div className="flex items-center gap-1.5 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
                 <span 
-                  className="w-2.5 h-2.5 rounded neo-border inline-block flex-shrink-0" 
+                  className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0" 
                   style={{ backgroundColor: getCategoryColor(idx) }}
                 />
-                <span className="font-extrabold text-neutral-800 truncate">{cat.name}</span>
+                <span className="font-semibold text-[var(--color-text-primary)] truncate">{cat.name}</span>
               </div>
-              <span className="font-mono font-bold text-neutral-500 flex-shrink-0">{cat.percentage}%</span>
+              <span className="font-mono font-medium text-[var(--color-text-secondary)] flex-shrink-0">{cat.percentage}%</span>
             </div>
           ))}
         </div>
@@ -334,13 +307,13 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
   return (
     <div className="space-y-4 px-1 py-1">
       {/* Period Selection Dropdown Header */}
-      <div id="stats-filter" className="bg-white p-3.5 neo-border rounded-[var(--radius-md)] neo-shadow-sm flex items-center justify-between gap-3">
-        <span className="text-xs font-black text-neutral-500 uppercase tracking-widest">Periode Analisa</span>
+      <div id="stats-filter" className="bg-white p-3.5 border border-[var(--color-border)] rounded-2xl shadow-xs flex items-center justify-between gap-3">
+        <span className="text-xs font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Periode Analisis</span>
         <div className="flex gap-2">
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="neo-border rounded-md px-2.5 py-1.5 text-xs font-black bg-white cursor-pointer focus:outline-none focus:bg-yellow-50"
+            className="border border-[var(--color-border)] rounded-xl px-2.5 py-1.5 text-xs font-bold text-[var(--color-text-primary)] bg-white cursor-pointer focus:outline-none focus:border-[var(--color-accent)]"
           >
             {MONTH_NAMES.map((m, idx) => (
               <option key={idx} value={idx}>{m}</option>
@@ -349,7 +322,7 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="neo-border rounded-md px-2.5 py-1.5 text-xs font-black bg-white cursor-pointer focus:outline-none focus:bg-yellow-50"
+            className="border border-[var(--color-border)] rounded-xl px-2.5 py-1.5 text-xs font-bold text-[var(--color-text-primary)] bg-white cursor-pointer focus:outline-none focus:border-[var(--color-accent)]"
           >
             {years.map(y => (
               <option key={y} value={y}>{y}</option>
@@ -359,33 +332,33 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
       </div>
 
       {/* 1. Comparison Chart */}
-      <div className="bg-[var(--color-surface)] p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-3 stats-card">
+      <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 flex items-center gap-1">
-            Arus Keuangan (Masuk vs Belanja)
+          <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+            Arus Kas (Masuk vs Belanja)
           </span>
-          <div className="flex gap-2.5 text-[9px] font-bold">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded bg-[var(--color-income)]"></span> Masuk
+          <div className="flex gap-3 text-[10px] font-semibold">
+            <span className="flex items-center gap-1.5 text-[var(--color-income)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--color-income)]"></span> Masuk
             </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded bg-[var(--color-expense)]"></span> Belanja
+            <span className="flex items-center gap-1.5 text-[var(--color-danger)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--color-danger)]"></span> Belanja
             </span>
           </div>
         </div>
 
         {renderBarChart()}
 
-        <div className="grid grid-cols-2 gap-3 text-center text-xs mt-2 pt-2 border-t border-neutral-200">
+        <div className="grid grid-cols-2 gap-3 text-center text-xs pt-3 border-t border-[var(--color-border)]">
           <div>
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">Tabungan Bulan Ini</span>
-            <p className="font-black font-mono text-emerald-600 mt-0.5">
+            <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Sisa Bersih Bulan Ini</span>
+            <p className="font-bold font-mono text-[var(--color-income)] mt-0.5">
               {formatRupiah(summaries.current.income - summaries.current.expense - summaries.current.saving)}
             </p>
           </div>
           <div>
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">Total Saving Terkunci</span>
-            <p className="font-black font-mono text-blue-500 mt-0.5">
+            <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Total Tabungan Terkumpul</span>
+            <p className="font-bold font-mono text-[var(--color-secondary)] mt-0.5">
               {formatRupiah(summaries.current.saving)}
             </p>
           </div>
@@ -393,32 +366,32 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
       </div>
 
       {/* 2. Donut Distribution */}
-      <div className="bg-[var(--color-surface)] p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-3 stats-card">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 flex items-center gap-1">
+      <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3">
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
           Distribusi Belanja Terbesar
         </span>
         {renderDonutChart()}
       </div>
 
       {/* 3. Horizontal Ranking Bar Charts */}
-      <div className="bg-[var(--color-surface)] p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-3 stats-card">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 flex items-center gap-1">
-          Rangking Kategori Belanja
+      <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3">
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+          Peringkat Kategori Belanja
         </span>
 
         {categoryExpenses.length === 0 ? (
-          <p className="text-xs text-neutral-400 text-center py-4 font-bold">Belum ada pengeluaran.</p>
+          <p className="text-xs text-[var(--color-text-muted)] text-center py-4 font-medium">Belum ada catatan pengeluaran.</p>
         ) : (
           <div className="space-y-3 pt-1">
             {categoryExpenses.map((cat, idx) => (
               <div key={cat.name} className="space-y-1">
-                <div className="flex justify-between items-center text-xs font-bold">
-                  <span>{idx + 1}. {cat.name}</span>
-                  <span className="font-mono text-neutral-500">{formatRupiah(cat.amount)} ({cat.percentage}%)</span>
+                <div className="flex justify-between items-center text-xs font-semibold">
+                  <span className="text-[var(--color-text-primary)]">{idx + 1}. {cat.name}</span>
+                  <span className="font-mono text-[var(--color-text-secondary)]">{formatRupiah(cat.amount)} ({cat.percentage}%)</span>
                 </div>
-                <div className="w-full h-3.5 bg-neutral-100 neo-border rounded-md overflow-hidden">
+                <div className="w-full h-2 bg-[var(--color-bg)] rounded-full overflow-hidden">
                   <div 
-                    className="h-full rounded-l transition-all duration-300"
+                    className="h-full rounded-full transition-all duration-300"
                     style={{ 
                        width: `${cat.percentage}%`,
                        backgroundColor: getCategoryColor(idx)
@@ -432,28 +405,36 @@ export default function Statistics({ transactions, settings }: StatisticsProps) 
       </div>
 
       {/* 4. Automated Insights Card */}
-      <div className="bg-[var(--color-surface)] p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-3 stats-card">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500 flex items-center gap-1">
-          Analisa & Solusi Keuangan
+      <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3">
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+          Analisis & Rekomendasi Finansial
         </span>
 
         <div className="space-y-2">
           {insights.length === 0 ? (
-            <p className="text-xs text-neutral-400 text-center py-2 font-bold">Belum ada analisa untuk periode ini.</p>
+            <p className="text-xs text-[var(--color-text-muted)] text-center py-2 font-medium">Belum ada analisis untuk periode ini.</p>
           ) : (
-            insights.map((insight, idx) => (
-              <div 
-                key={idx} 
-                className={`p-3 rounded-md neo-border text-xs font-bold ${
-                  insight.type === 'danger' ? 'bg-rose-100 border-rose-300 text-rose-800' :
-                  insight.type === 'warning' ? 'bg-yellow-50 border-yellow-300 text-yellow-800' :
-                  insight.type === 'success' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' :
-                  'bg-blue-50 border-blue-300 text-blue-800'
-                }`}
-              >
-                {insight.text}
-              </div>
-            ))
+            insights.map((insight, idx) => {
+              let alertClass = 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-secondary)]';
+              if (insight.type === 'danger') {
+                alertClass = 'bg-[var(--color-danger-light)] border-[var(--color-danger-border)] text-[var(--color-danger)]';
+              } else if (insight.type === 'warning') {
+                alertClass = 'bg-[var(--color-warning-light)] border-[var(--color-warning-border)] text-[var(--color-warning)]';
+              } else if (insight.type === 'success') {
+                alertClass = 'bg-[var(--color-income-light)] border-[var(--color-income-border)] text-[var(--color-income)]';
+              } else if (insight.type === 'info') {
+                alertClass = 'bg-[var(--color-saving-light)] border-[var(--color-saving-border)] text-[var(--color-secondary)]';
+              }
+
+              return (
+                <div 
+                  key={idx} 
+                  className={`p-3 rounded-xl border text-xs font-medium leading-relaxed ${alertClass}`}
+                >
+                  {insight.text}
+                </div>
+              );
+            })
           )}
         </div>
       </div>

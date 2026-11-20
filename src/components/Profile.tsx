@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AppSettings, Transaction, Wallet } from '../types';
 import { initDB, getTransactions, getGoals, getStreaks, getSettings, getWallets, saveWallet, deleteWallet } from '../db/indexedDB';
 import { calculateWalletBalances, formatRupiah } from '../utils/financeHelpers';
-import { Sun, Moon, Download, Upload, AlertTriangle, ShieldAlert, Check, Plus, Trash2, Bell, RefreshCw, User, Camera, ShoppingBag, Coins, Bookmark, FileText, Wallet as WalletIcon } from 'lucide-react';
+import { Download, Upload, AlertTriangle, Check, Plus, Trash2, Bell, RefreshCw, User, Camera, FileSpreadsheet, Wallet as WalletIcon } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import gsap from 'gsap';
 
@@ -32,12 +32,7 @@ export default function Profile({
   const [newWalletName, setNewWalletName] = useState('');
   const [newWalletBalance, setNewWalletBalance] = useState('');
 
-  // GSAP Entrance Animations
   useEffect(() => {
-    gsap.fromTo('.profile-card, .neo-card, .neo-shadow-sm',
-      { opacity: 0, y: 15 },
-      { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out' }
-    );
     loadWallets();
   }, []);
 
@@ -68,7 +63,7 @@ export default function Profile({
   };
 
   const handleDeleteWallet = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus wallet ini?')) return;
+    if (!confirm('Yakin ingin menghapus dompet ini?')) return;
     await deleteWallet(id);
     loadWallets();
   };
@@ -82,22 +77,18 @@ export default function Profile({
     setProfilePhoto(storedPhoto);
   }, []);
 
-  // Save name changes immediately
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     setUserName(name);
     localStorage.setItem('finance_user_name', name);
-    // Dispatch a custom event to update dashboard greeting immediately
     window.dispatchEvent(new Event('user_name_updated'));
   };
 
-  // Manage Category addition
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategory.trim()) return;
 
     const catName = newCategory.trim();
-    // Check duplication
     if (settings.categories[activeCatTab].includes(catName)) {
       alert('Kategori sudah ada!');
       return;
@@ -115,7 +106,6 @@ export default function Profile({
     setNewCategory('');
   };
 
-  // Manage Category deletion
   const handleDeleteCategory = (catToDelete: string) => {
     const hasTransactions = transactions.some(tx => tx.category === catToDelete && tx.type === activeCatTab);
     if (hasTransactions) {
@@ -125,7 +115,6 @@ export default function Profile({
 
     const updatedList = settings.categories[activeCatTab].filter(c => c !== catToDelete);
     
-    // Protect having at least one category
     if (updatedList.length === 0) {
       alert('Minimal harus ada 1 kategori tersisa!');
       return;
@@ -140,7 +129,6 @@ export default function Profile({
     });
   };
 
-  // Save Reminder configuration
   const handleReminderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = e.target.value;
     setReminderTime(time);
@@ -150,7 +138,6 @@ export default function Profile({
     });
   };
 
-  // Toggle active status for local daily notifications
   const handleToggleNotifications = async () => {
     const nextVal = !settings.notificationsEnabled;
     
@@ -167,17 +154,16 @@ export default function Profile({
           return;
         }
         
-        // Show test success notification
         if ('serviceWorker' in navigator) {
           const registration = await navigator.serviceWorker.ready;
-          registration.showNotification('📲 Alarm Daptrack Aktif!', {
+          registration.showNotification('📲 Alarm Duit Track Aktif!', {
             body: `Pengingat harian kamu telah berhasil dijadwalkan pada jam ${reminderTime}!`,
             icon: '/assets/logo.png',
             badge: '/assets/logo.png',
             vibrate: [200, 100, 200]
           } as any);
         } else {
-          new Notification('📲 Alarm Daptrack Aktif!', {
+          new Notification('📲 Alarm Duit Track Aktif!', {
             body: `Pengingat harian kamu telah berhasil dijadwalkan pada jam ${reminderTime}!`,
             icon: '/assets/logo.png'
           });
@@ -193,7 +179,6 @@ export default function Profile({
     });
   };
 
-  // System Full Backup to JSON
   const handleFullBackup = async () => {
     try {
       const dbTx = await getTransactions();
@@ -222,14 +207,13 @@ export default function Profile({
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Backup_Keuangan_Keren_${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `Backup_Keuangan_DuitTrack_${new Date().toISOString().split('T')[0]}.json`;
       link.click();
     } catch (err) {
       alert('Gagal membuat file cadangan: ' + err);
     }
   };
 
-  // System Full Restore from JSON
   const handleFullRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -249,21 +233,18 @@ export default function Profile({
 
         setResetMessage('Mengembalikan seluruh data cadangan...');
 
-        // 1. Reset database & localStorage first
         await onResetAllData();
 
         const db = await initDB();
 
-        // 2. Restore transactions
         if (parsed.transactions && Array.isArray(parsed.transactions)) {
           const txStore = db.transaction('transactions', 'readwrite').objectStore('transactions');
           for (const t of parsed.transactions) {
-            delete t.id; // clear to avoid key constraint error
+            delete t.id;
             txStore.add(t);
           }
         }
 
-        // 3. Restore goals
         if (parsed.goals && Array.isArray(parsed.goals)) {
           const goalStore = db.transaction('goals', 'readwrite').objectStore('goals');
           for (const g of parsed.goals) {
@@ -271,7 +252,6 @@ export default function Profile({
           }
         }
 
-        // 4. Restore streaks
         if (parsed.streaks && Array.isArray(parsed.streaks)) {
           const streakStore = db.transaction('streaks', 'readwrite').objectStore('streaks');
           for (const s of parsed.streaks) {
@@ -279,13 +259,11 @@ export default function Profile({
           }
         }
 
-        // 5. Restore settings
         if (parsed.settings) {
           const settingsStore = db.transaction('settings', 'readwrite').objectStore('settings');
           settingsStore.put(parsed.settings, 'app_settings');
         }
 
-        // 6. Restore localStorage preferences
         if (parsed.localStorage) {
           if (parsed.localStorage.finance_user_name) localStorage.setItem('finance_user_name', parsed.localStorage.finance_user_name);
           if (parsed.localStorage.finance_profile_photo) localStorage.setItem('finance_profile_photo', parsed.localStorage.finance_profile_photo);
@@ -294,7 +272,7 @@ export default function Profile({
         }
 
         alert('Selamat! Pemulihan seluruh data cadangan berhasil diselesaikan.');
-        window.location.reload(); // Reload cleanly to synchronize the new environment state
+        window.location.reload();
       } catch (err) {
         alert('Gagal membaca atau memulihkan file cadangan: ' + err);
       } finally {
@@ -304,7 +282,6 @@ export default function Profile({
     reader.readAsText(file);
   };
 
-  // Real Data Export to beautiful EXCEL (.xlsx) using xlsx library
   const handleExportExcel = () => {
     try {
       if (transactions.length === 0) {
@@ -312,7 +289,6 @@ export default function Profile({
         return;
       }
 
-      // Map data to custom Indonesian formatted records
       const worksheetData = transactions.map((t, index) => ({
         'No.': index + 1,
         'ID Transaksi': t.id || '',
@@ -324,34 +300,29 @@ export default function Profile({
         'Waktu Pencatatan': new Date(t.createdAt).toLocaleString('id-ID')
       }));
 
-      // Create Worksheet from JSON
       const worksheet = XLSX.utils.json_to_sheet(worksheetData);
 
-      // Define column widths for absolute neatness
       const colWidths = [
-        { wch: 6 },   // No
-        { wch: 14 },  // ID Transaksi
-        { wch: 15 },  // Jenis Aliran
-        { wch: 18 },  // Nominal
-        { wch: 20 },  // Kategori
-        { wch: 30 },  // Catatan
-        { wch: 15 },  // Tanggal
-        { wch: 24 }   // Waktu Pencatatan
+        { wch: 6 },
+        { wch: 14 },
+        { wch: 15 },
+        { wch: 18 },
+        { wch: 20 },
+        { wch: 30 },
+        { wch: 15 },
+        { wch: 24 }
       ];
       worksheet['!cols'] = colWidths;
 
-      // Create Workbook
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Daptrack');
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Keuangan');
 
-      // Write excel file and download
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
-      
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `Laporan_Keuangan_Daptrack_${new Date().toISOString().split('T')[0]}.xlsx`);
+      link.setAttribute('download', `Laporan_Keuangan_DuitTrack_${new Date().toISOString().split('T')[0]}.xlsx`);
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -359,7 +330,6 @@ export default function Profile({
     }
   };
 
-  // Factory Data Reset
   const handleFactoryReset = async () => {
     try {
       setResetMessage('Sedang membersihkan database...');
@@ -374,7 +344,7 @@ export default function Profile({
       setShowResetConfirm(false);
       window.dispatchEvent(new Event('user_name_updated'));
       window.dispatchEvent(new Event('profile_photo_updated'));
-      alert('Seluruh data keuangan berhasil di-reset ke pengaturan awal pabrik!');
+      alert('Seluruh data keuangan berhasil di-reset ke pengaturan awal!');
       window.location.reload();
     } catch (err) {
       alert('Gagal mereset data: ' + err);
@@ -382,20 +352,20 @@ export default function Profile({
   };
 
   return (
-    <div className="space-y-5 px-1 py-1">
+    <div className="space-y-4 px-1 py-1">
       {/* 1. Pengaturan Identitas */}
-      <div className="bg-[var(--color-surface)] p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-4">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500">
+      <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-4">
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
           Profil & Identitas Pengguna
         </span>
 
         {/* Profile Photo Uploader */}
-        <div className="flex items-center gap-4 pb-3 border-b border-neutral-150">
-          <div className="relative w-16 h-16 rounded-full border-3 border-neutral-950 bg-neutral-100 flex items-center justify-center overflow-hidden shrink-0 neo-shadow-sm">
+        <div className="flex items-center gap-4 pb-3 border-b border-[var(--color-border)]">
+          <div className="relative w-16 h-16 rounded-full bg-[var(--color-primary-light)] border border-[var(--color-border)] flex items-center justify-center overflow-hidden shrink-0">
             {profilePhoto ? (
               <img src={profilePhoto} alt="Foto Profil" className="w-full h-full object-cover" />
             ) : (
-              <User size={24} className="text-neutral-400" />
+              <User size={24} className="text-[var(--color-primary)]" />
             )}
           </div>
           <div className="flex-1">
@@ -424,9 +394,9 @@ export default function Profile({
             />
             <label
               htmlFor="profile-photo-input"
-              className="neo-btn bg-white hover:bg-neutral-50 px-2.5 py-1.5 text-[10px] font-black cursor-pointer inline-block"
+              className="px-3 py-1.5 bg-white hover:bg-neutral-50 border border-[var(--color-border)] rounded-lg text-xs font-semibold text-[var(--color-text-primary)] cursor-pointer inline-block transition-colors"
             >
-              Unggah Foto Profil
+              Pilih Foto Profil
             </label>
             {profilePhoto && (
               <button
@@ -436,7 +406,7 @@ export default function Profile({
                   localStorage.removeItem('finance_profile_photo');
                   window.dispatchEvent(new Event('profile_photo_updated'));
                 }}
-                className="text-rose-500 font-bold text-[10px] ml-3 hover:underline"
+                className="text-[var(--color-danger)] font-medium text-xs ml-3 hover:underline cursor-pointer"
               >
                 Hapus
               </button>
@@ -446,40 +416,45 @@ export default function Profile({
 
         {/* Name input */}
         <div className="space-y-1">
-          <label className="text-[11px] font-black text-neutral-400 uppercase">Nama Panggilan Kamu</label>
+          <label className="text-[11px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">Nama Panggilan</label>
           <input
             type="text"
             value={userName}
             onChange={handleNameChange}
-            className="w-full text-sm p-2.5 bg-neutral-50 neo-border rounded-md font-extrabold text-neutral-800 focus:outline-none focus:border-[var(--color-accent)]"
+            className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-bold text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
             placeholder="cth: Budi, Ani"
           />
         </div>
       </div>
 
-      {/* 2. Kelola Wallet (Dompet) */}
-      <div className="bg-[var(--color-surface)] p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-4">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500">
-          Kelola Dompet / Wallet
+      {/* 2. Kelola Dompet (Wallet) */}
+      <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3.5">
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+          Kelola Dompet / Akun Bank
         </span>
 
         {/* Existing wallets list */}
         <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto">
           {wallets.length === 0 ? (
-            <p className="text-xs text-neutral-400 italic">Belum ada wallet.</p>
+            <p className="text-xs text-[var(--color-text-muted)] italic py-2">Belum ada akun dompet tersimpan.</p>
           ) : (
             wallets.map(w => (
-              <div key={w.id} className="p-2.5 bg-neutral-50 border border-neutral-200 rounded-md flex justify-between items-center shadow-xs">
-                <div>
-                  <div className="text-xs font-extrabold">{w.name}</div>
-                  <div className="text-[10px] text-neutral-500 font-bold">{formatRupiah(walletBalances[w.id] || 0)}</div>
+              <div key={w.id} className="p-3 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl flex justify-between items-center">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-white border border-[var(--color-border)] flex items-center justify-center text-[var(--color-primary)]">
+                    <WalletIcon size={14} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-[var(--color-text-primary)]">{w.name}</div>
+                    <div className="text-[11px] font-mono text-[var(--color-text-secondary)] font-medium">{formatRupiah(walletBalances[w.id] || 0)}</div>
+                  </div>
                 </div>
                 <button 
                   onClick={() => handleDeleteWallet(w.id)}
-                  className="w-7 h-7 flex items-center justify-center bg-white border border-neutral-300 rounded text-rose-500 hover:bg-rose-50 cursor-pointer"
-                  title="Hapus Wallet"
+                  className="w-7 h-7 flex items-center justify-center bg-white border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-light)] cursor-pointer transition-colors"
+                  title="Hapus Dompet"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={13} />
                 </button>
               </div>
             ))
@@ -487,58 +462,58 @@ export default function Profile({
         </div>
 
         {/* Add wallet form */}
-        <form onSubmit={handleAddWallet} className="flex flex-col gap-2 pt-1">
+        <form onSubmit={handleAddWallet} className="flex flex-col gap-2 pt-1 border-t border-[var(--color-border)]">
           <input
             type="text"
             value={newWalletName}
             onChange={e => setNewWalletName(e.target.value)}
-            className="w-full text-xs p-2.5 bg-neutral-50 neo-border rounded-md font-bold focus:outline-none"
-            placeholder="Nama Dompet (cth: BCA, Gopay)"
+            className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
+            placeholder="Nama Dompet (cth: BCA, GoPay, Tunai)"
           />
           <input
             type="number"
             value={newWalletBalance}
             onChange={e => setNewWalletBalance(e.target.value)}
-            className="w-full text-xs p-2.5 bg-neutral-50 neo-border rounded-md font-bold focus:outline-none"
+            className="w-full text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-mono text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
             placeholder="Saldo Awal (Opsional)"
           />
           <button 
             type="submit"
-            className="neo-btn bg-[var(--color-income)] py-2 text-xs font-black flex justify-center items-center gap-2"
+            className="w-full py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-xl text-xs font-bold flex justify-center items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
           >
-            <Plus size={14} /> Tambah Wallet
+            <Plus size={14} /> Tambah Dompet
           </button>
         </form>
       </div>
 
       {/* 3. Kategori Custom Manager */}
-      <div className="bg-[var(--color-surface)] p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-4">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500">
+      <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3.5">
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
           Kelola Kategori Transaksi
         </span>
 
-        {/* mini tab switcher for categories */}
-        <div className="grid grid-cols-3 gap-1 p-1 bg-neutral-100 neo-border rounded-md">
+        {/* Mini tab switcher */}
+        <div className="grid grid-cols-3 gap-1 p-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl">
           <button
             onClick={() => setActiveCatTab('expense')}
-            className={`py-1 text-[10px] font-black rounded flex items-center justify-center ${
-              activeCatTab === 'expense' ? 'bg-rose-100 text-rose-700 border border-rose-300 font-extrabold' : 'text-neutral-500'
+            className={`py-1.5 text-xs font-bold rounded-lg flex items-center justify-center cursor-pointer transition-all ${
+              activeCatTab === 'expense' ? 'bg-[var(--color-danger)] text-white shadow-xs' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             Belanja
           </button>
           <button
             onClick={() => setActiveCatTab('income')}
-            className={`py-1 text-[10px] font-black rounded flex items-center justify-center ${
-              activeCatTab === 'income' ? 'bg-emerald-100 text-emerald-700 border border-emerald-300 font-extrabold' : 'text-neutral-500'
+            className={`py-1.5 text-xs font-bold rounded-lg flex items-center justify-center cursor-pointer transition-all ${
+              activeCatTab === 'income' ? 'bg-[var(--color-income)] text-white shadow-xs' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             Masuk
           </button>
           <button
             onClick={() => setActiveCatTab('saving')}
-            className={`py-1 text-[10px] font-black rounded flex items-center justify-center ${
-              activeCatTab === 'saving' ? 'bg-blue-100 text-blue-700 border border-blue-300 font-extrabold' : 'text-neutral-500'
+            className={`py-1.5 text-xs font-bold rounded-lg flex items-center justify-center cursor-pointer transition-all ${
+              activeCatTab === 'saving' ? 'bg-[var(--color-secondary)] text-white shadow-xs' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
             Nabung
@@ -546,19 +521,19 @@ export default function Profile({
         </div>
 
         {/* Existing categories list */}
-        <div className="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto p-1 border border-neutral-200 rounded-md bg-neutral-50">
+        <div className="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto p-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg)]">
           {settings.categories[activeCatTab].map(cat => {
             const hasActiveTransactions = transactions.some(tx => tx.category === cat && tx.type === activeCatTab);
             return (
               <div 
                 key={cat} 
-                className="px-2 py-1 bg-white text-[10px] font-bold rounded neo-border flex items-center gap-1.5 shadow-xs"
+                className="px-2.5 py-1 bg-white text-xs font-semibold text-[var(--color-text-primary)] rounded-lg border border-[var(--color-border)] flex items-center gap-1.5 shadow-xs"
               >
                 <span>{cat}</span>
                 {!hasActiveTransactions && (
                   <button 
                     onClick={() => handleDeleteCategory(cat)}
-                    className="text-neutral-400 hover:text-red-500 transition-colors cursor-pointer"
+                    className="text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors cursor-pointer text-xs"
                     title="Hapus Kategori"
                   >
                     ✕
@@ -575,34 +550,34 @@ export default function Profile({
             type="text"
             value={newCategory}
             onChange={e => setNewCategory(e.target.value)}
-            className="flex-1 text-xs p-2.5 bg-neutral-50 neo-border rounded-md font-bold focus:outline-none"
+            className="flex-1 text-xs p-2.5 bg-white border border-[var(--color-border)] rounded-xl font-medium text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
             placeholder="Tambah kategori baru..."
           />
           <button 
             type="submit"
-            className="neo-btn bg-[var(--color-income)] px-4"
+            className="px-4 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-xl cursor-pointer shadow-xs transition-colors"
           >
             <Plus size={16} />
           </button>
         </form>
       </div>
 
-      {/* 3. Daily Reminders */}
-      <div className="bg-[var(--color-surface)] p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-3">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500">
-          Alarm Pengingat Pencatatan
+      {/* 4. Daily Reminders */}
+      <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3">
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+          Pengingat Harian Otomatis
         </span>
 
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
           <div>
-            <span className="text-xs font-bold block">Status Alarm Pengingat</span>
-            <span className="text-[10px] text-neutral-400 font-medium">Kirim notifikasi harian otomatis</span>
+            <span className="text-xs font-bold text-[var(--color-text-primary)] block">Status Alarm</span>
+            <span className="text-[11px] text-[var(--color-text-secondary)] font-medium">Kirim notifikasi pengingat harian</span>
           </div>
           <button
             onClick={handleToggleNotifications}
-            className={`px-3 py-1.5 text-[10px] font-black rounded-md neo-border cursor-pointer transition-colors ${
+            className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border cursor-pointer transition-colors ${
               settings.notificationsEnabled 
-                ? 'bg-emerald-100 text-emerald-800 border-emerald-400 font-black' 
+                ? 'bg-[var(--color-income-light)] text-[var(--color-income)] border-[var(--color-income-border)]' 
                 : 'bg-neutral-100 text-neutral-500 border-neutral-300'
             }`}
           >
@@ -612,15 +587,15 @@ export default function Profile({
 
         <div className="flex items-center justify-between pt-1">
           <div>
-            <span className="text-xs font-bold block">Waktu Pengingat</span>
-            <span className="text-[10px] text-neutral-400 font-medium">Jam alarm berdering setiap hari</span>
+            <span className="text-xs font-bold text-[var(--color-text-primary)] block">Waktu Pengingat</span>
+            <span className="text-[11px] text-[var(--color-text-secondary)] font-medium">Jam alarm dikirimkan setiap hari</span>
           </div>
           <input
             type="time"
             value={reminderTime}
             onChange={handleReminderChange}
             disabled={!settings.notificationsEnabled}
-            className={`p-1.5 text-xs font-bold font-mono neo-border rounded-md focus:outline-none transition-all ${
+            className={`p-1.5 text-xs font-bold font-mono border border-[var(--color-border)] rounded-xl focus:outline-none transition-all ${
               settings.notificationsEnabled 
                 ? 'bg-white cursor-pointer opacity-100' 
                 : 'bg-neutral-100 opacity-40 cursor-not-allowed'
@@ -629,21 +604,21 @@ export default function Profile({
         </div>
       </div>
 
-      {/* 4. Data Export and Reset */}
-      <div className="bg-[var(--color-surface)] p-4 neo-border rounded-[var(--radius-md)] neo-shadow-sm space-y-4">
-        <span className="text-xs font-extrabold uppercase tracking-widest text-neutral-500">Pencadangan & Pemulihan Sistem</span>
+      {/* 5. Data Backup and Restore */}
+      <div className="bg-white p-4.5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3.5">
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">Cadangan & Pemulihan Data</span>
 
-        <p className="text-[10px] text-neutral-400 font-bold leading-relaxed">
-          Amankan catatan keuanganmu dengan membuat file cadangan JSON penuh, atau ekspor data ke file spreadsheet Excel (.xlsx) yang rapi.
+        <p className="text-[11px] text-[var(--color-text-secondary)] leading-relaxed">
+          Semua catatan keuangan tersimpan aman secara lokal di perangkatmu. Amankan dengan backup JSON atau ekspor ke file spreadsheet Excel.
         </p>
 
         <div className="grid grid-cols-2 gap-2 pt-1">
           <button
             onClick={handleFullBackup}
-            className="neo-btn py-2.5 text-xs font-black bg-amber-50 hover:bg-amber-100 flex items-center justify-center"
+            className="py-2.5 px-3 text-xs font-bold bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors"
             title="Backup seluruh database"
           >
-            Cadangkan Data
+            <Download size={14} /> Cadangkan (JSON)
           </button>
           
           <div className="relative">
@@ -656,64 +631,64 @@ export default function Profile({
             />
             <label
               htmlFor="restore-file-input"
-              className="neo-btn py-2.5 text-xs font-black bg-emerald-50 hover:bg-emerald-100 flex items-center justify-center cursor-pointer w-full"
+              className="py-2.5 px-3 text-xs font-bold bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-xl flex items-center justify-center gap-1.5 cursor-pointer w-full shadow-xs transition-colors"
               title="Restore database dari JSON"
             >
-              Pulihkan Data
+              <Upload size={14} /> Pulihkan (JSON)
             </label>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 pt-1">
+        <div>
           <button
             onClick={handleExportExcel}
-            className="neo-btn py-2 text-xs font-black bg-neutral-50 hover:bg-neutral-100 flex items-center justify-center"
+            className="w-full py-2.5 text-xs font-bold bg-[var(--color-income-light)] hover:bg-emerald-100 text-[var(--color-income)] border border-[var(--color-income-border)] rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
           >
-            Ekspor Laporan Excel (.xlsx)
+            <FileSpreadsheet size={15} /> Ekspor Laporan Excel (.xlsx)
           </button>
         </div>
 
-        <div className="pt-3 border-t border-neutral-150">
+        <div className="pt-3 border-t border-[var(--color-border)]">
           <button
             onClick={() => setShowResetConfirm(true)}
-            className="w-full neo-btn py-2.5 text-xs font-black bg-rose-100 text-rose-700 border-rose-400 hover:bg-rose-200 flex items-center justify-center"
+            className="w-full py-2.5 text-xs font-bold bg-[var(--color-danger-light)] hover:bg-red-100 text-[var(--color-danger)] border border-[var(--color-danger-border)] rounded-xl flex items-center justify-center cursor-pointer transition-colors"
           >
             Reset Seluruh Data (Factory Reset)
           </button>
         </div>
       </div>
 
-      {/* NEOMODAL DESTRUCTIVE FACTORY RESET */}
+      {/* MODAL DESTRUCTIVE FACTORY RESET */}
       {showResetConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-sm p-5 neo-border rounded-[var(--radius-lg)] neo-shadow-lg space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white w-full max-w-sm p-6 border border-[var(--color-border)] rounded-2xl shadow-xl space-y-4">
             <div className="text-center space-y-2">
-              <div className="inline-flex p-3 bg-rose-100 rounded-full neo-border">
-                <AlertTriangle size={32} className="text-rose-600 animate-bounce" />
+              <div className="w-12 h-12 mx-auto rounded-full bg-[var(--color-danger-light)] text-[var(--color-danger)] flex items-center justify-center">
+                <AlertTriangle size={24} />
               </div>
-              <h3 className="text-md font-black text-rose-600">Apakah Anda Yakin?</h3>
-              <p className="text-xs text-neutral-500 font-bold px-3">
-                Tindakan ini permanen. Semua data transaksi keuangan, status harian, dan streak yang dicatat akan dihapus selamanya dari IndexedDB browser.
+              <h3 className="text-base font-bold text-[var(--color-danger)]">Konfirmasi Reset Pabrik</h3>
+              <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed px-2">
+                Tindakan ini bersifat permanen. Seluruh riwayat transaksi keuangan, target impian, dan data streak akan dibersihkan dari penyimpanan lokal perangkat.
               </p>
             </div>
 
             {resetMessage ? (
-              <div className="text-center font-mono font-bold text-xs text-rose-500 animate-pulse flex items-center justify-center gap-2">
-                <RefreshCw size={12} className="animate-spin" /> {resetMessage}
+              <div className="text-center font-mono font-bold text-xs text-[var(--color-danger)] animate-pulse flex items-center justify-center gap-2">
+                <RefreshCw size={14} className="animate-spin" /> {resetMessage}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3.5 pt-2">
+              <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={() => setShowResetConfirm(false)}
-                  className="neo-btn py-2 text-xs font-black bg-neutral-100 hover:bg-neutral-200 text-neutral-800"
+                  className="py-2.5 bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-secondary)] text-xs font-bold rounded-xl cursor-pointer transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleFactoryReset}
-                  className="neo-btn py-2 text-xs font-black bg-rose-600 hover:bg-rose-700 text-white border-rose-700"
+                  className="py-2.5 bg-[var(--color-danger)] hover:bg-rose-700 text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-colors"
                 >
-                  Ya, Hapus Semua!
+                  Ya, Hapus Semua
                 </button>
               </div>
             )}

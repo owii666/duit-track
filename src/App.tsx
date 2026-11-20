@@ -8,8 +8,8 @@ import {
   deleteTransaction, 
   saveSettings, 
   saveStreakDay, 
-  resetAllData,
-  getGoals,
+  resetAllData, 
+  getGoals, 
   DEFAULT_SETTINGS 
 } from './db/indexedDB';
 import { processStreaks } from './utils/streakLogic';
@@ -20,7 +20,7 @@ import History from './components/History';
 import Statistics from './components/Statistics';
 import Profile from './components/Profile';
 import Goals from './components/Goals';
-import { Home, History as HistoryIcon, BarChart2, User, Plus, Sparkles, Flame, Target } from 'lucide-react';
+import { Home, History as HistoryIcon, BarChart2, User, Plus, Sparkles, Target, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'goals' | 'history' | 'stats' | 'profile'>('home');
@@ -184,7 +184,6 @@ export default function App() {
 
   // Monitor FAB inactivity
   useEffect(() => {
-    // Setup interval to check elapsed time since last action/interaction
     const checkTimer = setInterval(() => {
       const elapsed = Date.now() - lastActivityTime;
       if (elapsed >= 10000 && !isFabCollapsed) {
@@ -247,10 +246,8 @@ export default function App() {
     try {
       await addTransaction(tx);
       setIsAddModalOpen(false);
-      
       // Reload everything to sync streak status & predictions
       await loadDatabaseValues();
-
     } catch (err) {
       console.error('Failed to save transaction: ', err);
     }
@@ -291,18 +288,15 @@ export default function App() {
   const handleOpenAddModal = (type: 'income' | 'expense' | 'saving' | 'transfer') => {
     setAddModalType(type);
     setIsAddModalOpen(true);
-    // Reset FAB slide state
     setLastActivityTime(Date.now());
     setIsFabCollapsed(false);
   };
 
   const handleFabClick = () => {
     if (isFabCollapsed) {
-      // If partially hidden, clicking it slides it back fully
       setIsFabCollapsed(false);
       setLastActivityTime(Date.now());
     } else {
-      // If fully visible, clicking it launches the modal
       setAddModalType('expense');
       setIsAddModalOpen(true);
       setLastActivityTime(Date.now());
@@ -312,64 +306,91 @@ export default function App() {
   // Render onboarding screen
   if (showOnboarding) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)] text-neutral-900 flex items-center justify-center p-4 font-sans select-none">
-        <div className="w-full max-w-sm bg-white border-3 border-neutral-900 rounded-2xl p-6 neo-shadow-lg space-y-6 relative overflow-hidden">
-          {/* Accent decoration */}
-          <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--color-accent)] opacity-15 rounded-bl-full pointer-events-none" />
+      <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)] flex items-center justify-center p-4 font-sans select-none">
+        <div className="w-full max-w-sm bg-white border border-[var(--color-border)] rounded-2xl p-6 shadow-lg space-y-6 relative overflow-hidden">
+          {/* Header step indicators */}
+          <div className="flex items-center justify-between pb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[var(--color-primary-light)] flex items-center justify-center text-[var(--color-primary)] font-bold text-sm">
+                DT
+              </div>
+              <span className="text-xs font-semibold tracking-wide text-[var(--color-text-secondary)]">Duit Track</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {[1, 2, 3].map((step) => (
+                <div 
+                  key={step} 
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    onboardingStep === step 
+                      ? 'w-6 bg-[var(--color-primary)]' 
+                      : onboardingStep > step 
+                      ? 'w-2 bg-[var(--color-accent)]' 
+                      : 'w-2 bg-neutral-200'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
 
           {/* Onboarding Step 1: Welcome */}
           {onboardingStep === 1 && (
-            <div className="space-y-6 animate-fade-in text-center py-4">
-              <div className="inline-flex p-3 bg-amber-50 border-2 border-neutral-900 rounded-full">
-                <Sparkles size={36} className="text-amber-500 animate-pulse" />
+            <div className="space-y-6 text-center py-2 animate-fade-in">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-[var(--color-primary-light)] flex items-center justify-center text-[var(--color-primary)]">
+                <Sparkles size={32} />
               </div>
               <div className="space-y-2">
-                <h1 className="text-2xl font-black tracking-tight leading-tight">Disiplin Keuangan Jadi Seru!</h1>
-                <p className="text-xs text-neutral-500 font-bold leading-relaxed px-2">
-                  Kelola pengeluaran, pantau streak harian ala Duolingo, dan capai target impian tabunganmu lewat feed interaktif!
+                <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">Kelola Keuangan Lebih Tenang</h1>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed px-1">
+                  Catat pengeluaran harian, pantau kebiasaan menabung, dan capai target keuangan impianmu dengan rapi dan aman secara lokal.
                 </p>
               </div>
 
               <button
                 onClick={() => setOnboardingStep(2)}
-                className="neo-btn bg-[var(--color-accent)] hover:bg-yellow-400 w-full py-2.5 font-black text-sm flex items-center justify-center gap-1"
+                className="w-full py-3 px-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-semibold text-sm rounded-xl transition-all shadow-sm active:scale-[0.99] cursor-pointer"
               >
-                Mulai Sekarang!
+                Mulai Sekarang
               </button>
             </div>
           )}
 
           {/* Onboarding Step 2: Name Input */}
           {onboardingStep === 2 && (
-            <div className="space-y-5 animate-fade-in py-2">
+            <div className="space-y-5 py-2 animate-fade-in">
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Langkah 1 dari 2</span>
-                <h2 className="text-lg font-black text-neutral-900">Siapa nama panggilanmu?</h2>
-                <p className="text-xs text-neutral-500 font-medium font-sans">Beri tahu kami agar aplikasi terasa lebih personal.</p>
+                <span className="text-[11px] font-semibold tracking-wider text-[var(--color-accent)] uppercase">Langkah 1 dari 2</span>
+                <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Siapa nama panggilanmu?</h2>
+                <p className="text-xs text-[var(--color-text-secondary)]">Beri tahu kami agar sapaan dan laporan terasa lebih personal.</p>
               </div>
 
               <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Masukkan namamu (misal: Budi, Susi)..."
-                  value={onboardingName}
-                  onChange={e => setOnboardingName(e.target.value)}
-                  className="w-full px-4 py-3 bg-neutral-50 border-2 border-neutral-900 rounded-lg text-sm font-bold focus:outline-none focus:bg-white"
-                  maxLength={15}
-                  required
-                />
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Budi, Susi..."
+                    value={onboardingName}
+                    onChange={e => setOnboardingName(e.target.value)}
+                    className="w-full px-4 py-3 bg-white border border-[var(--color-border)] rounded-xl text-sm font-semibold text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/15 transition-all"
+                    maxLength={15}
+                    required
+                  />
+                </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2.5 pt-1">
                   <button
                     onClick={() => setOnboardingStep(1)}
-                    className="w-1/3 neo-btn bg-neutral-100 hover:bg-neutral-200 py-2.5 text-xs font-black"
+                    className="w-1/3 py-2.5 px-3 bg-white border border-[var(--color-border)] hover:bg-[var(--color-bg)] text-[var(--color-text-secondary)] rounded-xl text-xs font-semibold transition-all cursor-pointer"
                   >
                     Kembali
                   </button>
                   <button
                     onClick={() => onboardingName.trim() && setOnboardingStep(3)}
                     disabled={!onboardingName.trim()}
-                    className={`flex-1 neo-btn ${onboardingName.trim() ? 'bg-[var(--color-accent)]' : 'bg-neutral-200 text-neutral-400 cursor-not-allowed border-neutral-300'} py-2.5 text-xs font-black`}
+                    className={`flex-1 py-2.5 px-4 font-semibold text-xs rounded-xl transition-all cursor-pointer ${
+                      onboardingName.trim() 
+                        ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white shadow-sm active:scale-[0.99]' 
+                        : 'bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200'
+                    }`}
                   >
                     Lanjut
                   </button>
@@ -380,45 +401,52 @@ export default function App() {
 
           {/* Onboarding Step 3: Goals Selection */}
           {onboardingStep === 3 && (
-            <div className="space-y-5 animate-fade-in py-2">
+            <div className="space-y-5 py-2 animate-fade-in">
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Langkah 2 dari 2</span>
-                <h2 className="text-lg font-black text-neutral-900">Apa tujuan keuangan utamamu?</h2>
-                <p className="text-xs text-neutral-500 font-medium">Ini membantu menyelaraskan fokus pencatatanmu.</p>
+                <span className="text-[11px] font-semibold tracking-wider text-[var(--color-accent)] uppercase">Langkah 2 dari 2</span>
+                <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Fokus keuangan utamamu?</h2>
+                <p className="text-xs text-[var(--color-text-secondary)]">Pilih tujuan yang paling ingin kamu prioritaskan saat ini.</p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {[
                   { id: 'menabung', label: 'Menabung demi masa depan' },
                   { id: 'mencatat_tidak_jelas', label: 'Mencatat pengeluaran yang tidak jelas' },
-                  { id: 'membatasi_impulsif', label: 'Membatasi belanja impulsif atau lapar mata' },
+                  { id: 'membatasi_impulsif', label: 'Membatasi belanja impulsif & lapar mata' },
                   { id: 'dana_darurat', label: 'Membangun dana darurat yang kokoh' }
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => setOnboardingGoal(item.id)}
-                    className={`w-full text-left px-4 py-3 border-2 rounded-lg text-xs font-bold transition-all flex justify-between items-center ${
-                      onboardingGoal === item.id
-                        ? 'border-neutral-900 bg-yellow-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                        : 'border-neutral-200 bg-white hover:border-neutral-400 text-neutral-600'
-                    }`}
-                  >
-                    <span>{item.label}</span>
-                    {onboardingGoal === item.id && <span className="text-[10px] bg-neutral-900 text-white px-1.5 py-0.5 rounded">Dipilih</span>}
-                  </button>
-                ))}
+                ].map(item => {
+                  const isSelected = onboardingGoal === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setOnboardingGoal(item.id)}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-xs font-medium transition-all flex justify-between items-center border cursor-pointer ${
+                        isSelected
+                          ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)] font-semibold shadow-xs'
+                          : 'border-[var(--color-border)] bg-white hover:border-[var(--color-border-hover)] text-[var(--color-text-primary)]'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      {isSelected ? (
+                        <CheckCircle2 size={16} className="text-[var(--color-primary)] shrink-0" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border border-[var(--color-border)] shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2.5 pt-2">
                 <button
                   onClick={() => setOnboardingStep(2)}
-                  className="w-1/3 neo-btn bg-neutral-100 hover:bg-neutral-200 py-2.5 text-xs font-black"
+                  className="w-1/3 py-2.5 px-3 bg-white border border-[var(--color-border)] hover:bg-[var(--color-bg)] text-[var(--color-text-secondary)] rounded-xl text-xs font-semibold transition-all cursor-pointer"
                 >
                   Kembali
                 </button>
                 <button
                   onClick={handleCompleteOnboarding}
-                  className="flex-1 neo-btn bg-[var(--color-accent)] hover:bg-yellow-400 py-2.5 text-xs font-black"
+                  className="flex-1 py-2.5 px-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-xl text-xs font-semibold shadow-sm active:scale-[0.99] transition-all cursor-pointer"
                 >
                   Selesaikan
                 </button>
@@ -430,128 +458,88 @@ export default function App() {
     );
   }
 
-  // Render Loader screen (Highly-detailed homepage skeleton matching all sections exactly)
+  // Render Loader screen (Clean Modern Skeleton)
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)] pb-24 text-neutral-900 flex justify-center select-none font-sans relative">
-        <div className="w-full max-w-md px-4 py-4 space-y-5 animate-pulse">
+      <div className="min-h-screen bg-[var(--color-bg)] pb-24 text-[var(--color-text-primary)] flex justify-center select-none font-sans relative">
+        <div className="w-full max-w-md px-4 py-4 space-y-4 animate-pulse">
           
           {/* 1. Skeleton: Header Ringkas */}
-          <div className="flex justify-between items-center bg-white p-3.5 border-3 border-neutral-900 rounded-[var(--radius-md)] neo-shadow-sm">
+          <div className="flex justify-between items-center bg-white p-4 border border-[var(--color-border)] rounded-2xl shadow-xs">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-2 border-neutral-900 bg-neutral-200 shrink-0" />
+              <div className="w-11 h-11 rounded-full bg-neutral-100 shrink-0" />
               <div className="space-y-2">
-                <div className="h-3.5 bg-neutral-200 rounded w-20" />
-                <div className="h-3 bg-neutral-200 rounded w-32" />
+                <div className="h-3 bg-neutral-200 rounded-md w-20" />
+                <div className="h-4 bg-neutral-200 rounded-md w-32" />
               </div>
             </div>
-            <div className="w-24 h-9 rounded-full bg-neutral-200 border-2 border-neutral-900" />
+            <div className="w-20 h-8 rounded-full bg-neutral-100" />
           </div>
 
           {/* 2. Skeleton: Kartu Saldo Utama */}
-          <div className="bg-white p-6 border-3 border-neutral-900 rounded-[var(--radius-lg)] neo-shadow-lg flex flex-col justify-between relative overflow-hidden h-44">
-            <div className="absolute right-4 top-4 w-9 h-9 rounded-full bg-neutral-200 border-2 border-neutral-900" />
-            
-            <div className="space-y-2.5">
-              <div className="h-3 bg-neutral-200 rounded w-24" />
-              <div className="h-8 bg-neutral-200 rounded w-44" />
+          <div className="bg-white p-6 border border-[var(--color-border)] rounded-2xl shadow-xs flex flex-col justify-between h-44">
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <div className="h-3 bg-neutral-200 rounded-md w-24" />
+                <div className="h-8 bg-neutral-200 rounded-md w-44" />
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-neutral-100" />
             </div>
 
             <div className="space-y-2.5">
               <div className="flex justify-between items-center">
-                <div className="h-3 bg-neutral-200 rounded w-36" />
-                <div className="h-4 bg-neutral-200 rounded w-16" />
+                <div className="h-3 bg-neutral-200 rounded-md w-36" />
+                <div className="h-3 bg-neutral-200 rounded-md w-16" />
               </div>
-              <div className="w-full h-4 bg-neutral-200 rounded-full border-2 border-neutral-900" />
+              <div className="w-full h-2.5 bg-neutral-100 rounded-full" />
             </div>
           </div>
 
-          {/* 3. Skeleton: Kartu Streak (Duolingo Style with Background Flame representation) */}
-          <div className="bg-white p-5 border-3 border-neutral-900 rounded-[var(--radius-md)] neo-shadow-md relative overflow-hidden min-h-[100px] flex flex-col justify-center">
+          {/* 3. Skeleton: Kartu Streak */}
+          <div className="bg-white p-5 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-4">
             <div className="space-y-2">
-              <div className="h-4 bg-neutral-200 rounded w-32" />
-              <div className="h-3 bg-neutral-200 rounded w-48" />
+              <div className="h-4 bg-neutral-200 rounded-md w-32" />
+              <div className="h-3 bg-neutral-200 rounded-md w-48" />
             </div>
 
-            <div className="grid grid-cols-7 gap-1 mt-4 pt-3 border-t border-neutral-200">
+            <div className="grid grid-cols-7 gap-2 pt-2 border-t border-[var(--color-border)]">
               {[1, 2, 3, 4, 5, 6, 7].map((val) => (
                 <div key={val} className="flex flex-col items-center gap-1.5">
-                  <div className="h-2.5 bg-neutral-200 rounded w-6" />
-                  <div className="w-9 h-9 rounded-full bg-neutral-100 border-2 border-neutral-200" />
+                  <div className="h-2.5 bg-neutral-200 rounded w-5" />
+                  <div className="w-8 h-8 rounded-full bg-neutral-100" />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* 4. Skeleton: Ringkasan Bulanan (Stacked list) */}
-          <div className="space-y-3">
-            {[1, 2, 3].map((val) => (
-              <div key={val} className="bg-white p-4 border-3 border-neutral-900 rounded-[var(--radius-md)] neo-shadow-sm flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-neutral-100 border-2 border-neutral-900" />
-                  <div className="space-y-1.5">
-                    <div className="h-2.5 bg-neutral-200 rounded w-20" />
-                    <div className="h-3 bg-neutral-200 rounded w-24" />
-                  </div>
-                </div>
-                <div className="h-5 bg-neutral-200 rounded w-28" />
+          {/* 4. Skeleton: Quick Actions */}
+          <div className="grid grid-cols-4 gap-2.5">
+            {[1, 2, 3, 4].map((val) => (
+              <div key={val} className="bg-white border border-[var(--color-border)] p-3 flex flex-col items-center justify-center gap-2 h-20 rounded-xl shadow-xs">
+                <div className="w-7 h-7 rounded-lg bg-neutral-100" />
+                <div className="h-2.5 bg-neutral-200 rounded w-12" />
               </div>
             ))}
           </div>
 
-          {/* 5. Skeleton: Quick Actions */}
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3].map((val) => (
-              <div key={val} className="bg-neutral-100 border-3 border-neutral-900 p-4 flex flex-col items-center justify-center gap-2 h-20 rounded-[var(--radius-md)]">
-                <div className="w-6 h-6 rounded bg-neutral-200" />
-                <div className="h-3 bg-neutral-200 rounded w-12" />
-              </div>
-            ))}
-          </div>
-
-          {/* 6. Skeleton: Target Impian Nabung (Touch Carousel) */}
-          <div className="bg-white p-4.5 border-3 border-neutral-900 rounded-[var(--radius-md)] neo-shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="h-3.5 bg-neutral-200 rounded w-36" />
-              <div className="h-2.5 bg-neutral-200 rounded w-24" />
-            </div>
-
-            <div className="bg-white p-3.5 border-2 border-neutral-900 rounded-lg flex gap-3">
-              <div className="w-16 h-16 rounded-lg border-2 border-neutral-900 bg-neutral-100 shrink-0" />
-              <div className="flex-1 flex flex-col justify-between">
-                <div className="space-y-1.5">
-                  <div className="h-4 bg-neutral-200 rounded w-28" />
-                  <div className="h-3 bg-neutral-200 rounded w-36" />
-                </div>
-                <div className="space-y-1.5 mt-2">
-                  <div className="w-full h-3.5 bg-neutral-200 rounded-full border-2 border-neutral-900" />
-                  <div className="flex justify-between items-center">
-                    <div className="h-2.5 bg-neutral-200 rounded w-16" />
-                    <div className="h-3.5 bg-neutral-200 rounded w-20" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 7. Skeleton: Transaksi Terbaru */}
-          <div className="bg-white p-4.5 border-3 border-neutral-900 rounded-[var(--radius-md)] neo-shadow-md space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="h-4 bg-neutral-200 rounded w-28" />
-              <div className="h-3.5 bg-neutral-200 rounded w-12" />
+          {/* 5. Skeleton: Transaksi Terbaru */}
+          <div className="bg-white p-4 border border-[var(--color-border)] rounded-2xl shadow-xs space-y-3">
+            <div className="flex justify-between items-center pb-1">
+              <div className="h-4 bg-neutral-200 rounded-md w-28" />
+              <div className="h-3 bg-neutral-200 rounded-md w-12" />
             </div>
 
             <div className="space-y-2">
               {[1, 2, 3].map((val) => (
-                <div key={val} className="p-3 bg-white border-2 border-neutral-900 rounded-lg flex items-center justify-between gap-3">
+                <div key={val} className="p-3 bg-[var(--color-bg)] rounded-xl flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full border-2 border-neutral-900 bg-neutral-200 shrink-0" />
+                    <div className="w-9 h-9 rounded-xl bg-neutral-200 shrink-0" />
                     <div className="space-y-1.5">
                       <div className="h-3 bg-neutral-200 rounded w-24" />
-                      <div className="h-2 bg-neutral-200 rounded w-16" />
+                      <div className="h-2.5 bg-neutral-200 rounded w-16" />
                     </div>
                   </div>
-                  <div className="h-4 bg-neutral-200 rounded w-20" />
+                  <div className="h-3.5 bg-neutral-200 rounded w-20" />
                 </div>
               ))}
             </div>
@@ -563,17 +551,19 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] pb-24 text-neutral-900 flex justify-center select-none font-sans relative">
+    <div className="min-h-screen bg-[var(--color-bg)] pb-24 text-[var(--color-text-primary)] flex justify-center select-none font-sans relative">
       <div className="w-full max-w-md px-4 py-4 space-y-4">
         
         {/* PWA Install Invitation Card */}
         {installPromptEvent && (
-          <div className="bg-orange-50 border-2 border-neutral-900 p-3.5 rounded-lg neo-shadow-sm flex items-center justify-between gap-3 animate-bounce-subtle">
-            <div className="flex items-center gap-2.5">
-              <div className="text-xl">📲</div>
+          <div className="bg-white border border-[var(--color-border)] p-3.5 rounded-2xl shadow-sm flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center font-bold text-base shrink-0">
+                📲
+              </div>
               <div>
-                <h4 className="text-xs font-black text-neutral-800">Pasang Daptrack!</h4>
-                <p className="text-[10px] text-neutral-500 font-bold leading-tight mt-0.5">Akses instan dari layar utama HP atau Desktop.</p>
+                <h4 className="text-xs font-bold text-[var(--color-text-primary)]">Pasang Duit Track</h4>
+                <p className="text-[11px] text-[var(--color-text-secondary)] leading-tight mt-0.5">Akses instan dari layar utama HP atau komputermu.</p>
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -586,13 +576,13 @@ export default function App() {
                     setInstallPromptEvent(null);
                   }
                 }}
-                className="px-3 py-1.5 bg-neutral-900 text-white text-[10px] font-black rounded neo-border cursor-pointer"
+                className="px-3 py-1.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white text-[11px] font-semibold rounded-lg shadow-xs cursor-pointer transition-colors"
               >
                 Pasang
               </button>
               <button
                 onClick={() => setInstallPromptEvent(null)}
-                className="w-6 h-6 rounded flex items-center justify-center font-bold text-neutral-400 text-xs hover:text-neutral-950 cursor-pointer"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] text-sm cursor-pointer transition-colors"
               >
                 ✕
               </button>
@@ -650,19 +640,19 @@ export default function App() {
         </main>
       </div>
 
-      {/* BOTTOM FIXED NAVIGATION BAR (Pinned Flat at Very Bottom of Screen with Extra Safe Padding) */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t-3 border-neutral-900 pt-2 pb-[calc(16px+env(safe-area-inset-bottom,0px))] z-35 flex justify-between items-center rounded-none shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+      {/* BOTTOM FIXED NAVIGATION BAR (Modern clean e-wallet dock) */}
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-[var(--color-border)] pt-2 pb-[calc(14px+env(safe-area-inset-bottom,0px))] z-35 flex justify-between items-center rounded-none shadow-[0_-4px_16px_rgba(26,67,78,0.05)]">
         {/* Home */}
         <button
           onClick={() => setActiveTab('home')}
           className={`flex flex-col items-center justify-center py-1 flex-1 h-12 transition-colors cursor-pointer ${
             activeTab === 'home'
-              ? 'text-neutral-950 font-black'
-              : 'text-neutral-400 font-bold hover:text-neutral-600'
+              ? 'text-[var(--color-primary)] font-bold'
+              : 'text-[var(--color-text-muted)] font-medium hover:text-[var(--color-text-secondary)]'
           }`}
         >
-          <Home size={18} strokeWidth={activeTab === 'home' ? 3 : 2} />
-          <span className="text-[9px] mt-0.5">Beranda</span>
+          <Home size={19} strokeWidth={activeTab === 'home' ? 2.5 : 1.8} />
+          <span className="text-[10px] mt-1 font-medium">Beranda</span>
         </button>
 
         {/* Goals */}
@@ -670,12 +660,12 @@ export default function App() {
           onClick={() => setActiveTab('goals')}
           className={`flex flex-col items-center justify-center py-1 flex-1 h-12 transition-colors cursor-pointer ${
             activeTab === 'goals'
-              ? 'text-neutral-950 font-black'
-              : 'text-neutral-400 font-bold hover:text-neutral-600'
+              ? 'text-[var(--color-primary)] font-bold'
+              : 'text-[var(--color-text-muted)] font-medium hover:text-[var(--color-text-secondary)]'
           }`}
         >
-          <Target size={18} strokeWidth={activeTab === 'goals' ? 3 : 2} />
-          <span className="text-[9px] mt-0.5">Target</span>
+          <Target size={19} strokeWidth={activeTab === 'goals' ? 2.5 : 1.8} />
+          <span className="text-[10px] mt-1 font-medium">Target</span>
         </button>
 
         {/* History / Aktivitas */}
@@ -683,12 +673,12 @@ export default function App() {
           onClick={() => setActiveTab('history')}
           className={`flex flex-col items-center justify-center py-1 flex-1 h-12 transition-colors cursor-pointer ${
             activeTab === 'history'
-              ? 'text-neutral-950 font-black'
-              : 'text-neutral-400 font-bold hover:text-neutral-600'
+              ? 'text-[var(--color-primary)] font-bold'
+              : 'text-[var(--color-text-muted)] font-medium hover:text-[var(--color-text-secondary)]'
           }`}
         >
-          <HistoryIcon size={18} strokeWidth={activeTab === 'history' ? 3 : 2} />
-          <span className="text-[9px] mt-0.5">Aktivitas</span>
+          <HistoryIcon size={19} strokeWidth={activeTab === 'history' ? 2.5 : 1.8} />
+          <span className="text-[10px] mt-1 font-medium">Aktivitas</span>
         </button>
 
         {/* Statistics */}
@@ -696,12 +686,12 @@ export default function App() {
           onClick={() => setActiveTab('stats')}
           className={`flex flex-col items-center justify-center py-1 flex-1 h-12 transition-colors cursor-pointer ${
             activeTab === 'stats'
-              ? 'text-neutral-950 font-black'
-              : 'text-neutral-400 font-bold hover:text-neutral-600'
+              ? 'text-[var(--color-primary)] font-bold'
+              : 'text-[var(--color-text-muted)] font-medium hover:text-[var(--color-text-secondary)]'
           }`}
         >
-          <BarChart2 size={18} strokeWidth={activeTab === 'stats' ? 3 : 2} />
-          <span className="text-[9px] mt-0.5">Analisis</span>
+          <BarChart2 size={19} strokeWidth={activeTab === 'stats' ? 2.5 : 1.8} />
+          <span className="text-[10px] mt-1 font-medium">Analisis</span>
         </button>
 
         {/* Profile */}
@@ -709,19 +699,19 @@ export default function App() {
           onClick={() => setActiveTab('profile')}
           className={`flex flex-col items-center justify-center py-1 flex-1 h-12 transition-colors cursor-pointer ${
             activeTab === 'profile'
-              ? 'text-neutral-950 font-black'
-              : 'text-neutral-400 font-bold hover:text-neutral-600'
+              ? 'text-[var(--color-primary)] font-bold'
+              : 'text-[var(--color-text-muted)] font-medium hover:text-[var(--color-text-secondary)]'
           }`}
         >
-          <User size={18} strokeWidth={activeTab === 'profile' ? 3 : 2} />
-          <span className="text-[9px] mt-0.5">Profil</span>
+          <User size={19} strokeWidth={activeTab === 'profile' ? 2.5 : 1.8} />
+          <span className="text-[10px] mt-1 font-medium">Profil</span>
         </button>
       </nav>
 
-      {/* FLOATING ACTION BUTTON (With Auto-Slide Out Interaction) */}
+      {/* FLOATING ACTION BUTTON */}
       <div 
-        className={`fixed bottom-24 right-4 z-40 transition-all duration-500 transform ${
-          isFabCollapsed ? 'translate-x-[60%] opacity-70' : 'translate-x-0 opacity-100'
+        className={`fixed bottom-22 right-4 z-40 transition-all duration-300 transform ${
+          isFabCollapsed ? 'translate-x-5 opacity-80' : 'translate-x-0 opacity-100'
         }`}
         onMouseEnter={() => {
           setIsFabCollapsed(false);
@@ -734,10 +724,11 @@ export default function App() {
       >
         <button
           onClick={handleFabClick}
-          className="w-13 h-13 bg-[var(--color-accent)] hover:bg-yellow-400 text-neutral-950 rounded-full flex items-center justify-center border-3 border-neutral-900 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none hover:scale-105 transition-all relative cursor-pointer"
+          className="w-13 h-13 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 hover:scale-105 transition-all cursor-pointer"
           title="Tambah Transaksi"
+          aria-label="Tambah Transaksi"
         >
-          <Plus size={26} strokeWidth={3} className={`transition-transform duration-300 ${isFabCollapsed ? 'rotate-45 text-neutral-600' : 'text-neutral-950'}`} />
+          <Plus size={24} strokeWidth={2.5} className={`transition-transform duration-300 ${isFabCollapsed ? 'rotate-45' : ''}`} />
         </button>
       </div>
 
@@ -752,16 +743,21 @@ export default function App() {
 
       {/* CUSTOM DELETE CONFIRMATION MODAL */}
       {txToDelete !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white w-full max-w-xs p-5 border-3 border-neutral-900 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-4 text-center">
-            <h3 className="text-md font-black">Hapus Transaksi?</h3>
-            <p className="text-xs text-neutral-500 font-bold leading-relaxed">
-              Apakah kamu yakin ingin menghapus catatan transaksi ini dari penyimpanan lokal? Tindakan ini tidak dapat dibatalkan.
-            </p>
-            <div className="flex gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white w-full max-w-xs p-6 border border-[var(--color-border)] rounded-2xl shadow-xl space-y-4 text-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-[var(--color-danger-light)] text-[var(--color-danger)] flex items-center justify-center">
+              <span className="text-xl">⚠️</span>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-[var(--color-text-primary)]">Hapus Transaksi?</h3>
+              <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                Catatan transaksi ini akan dihapus dari penyimpanan. Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+            <div className="flex gap-2.5 pt-2">
               <button
                 onClick={() => setTxToDelete(null)}
-                className="w-1/2 neo-btn bg-neutral-100 hover:bg-neutral-200 py-2.5 text-xs font-black cursor-pointer"
+                className="w-1/2 py-2.5 px-3 bg-white border border-[var(--color-border)] hover:bg-[var(--color-bg)] text-[var(--color-text-secondary)] rounded-xl text-xs font-semibold cursor-pointer transition-colors"
               >
                 Batal
               </button>
@@ -776,7 +772,7 @@ export default function App() {
                     console.error('Failed to delete transaction: ', err);
                   }
                 }}
-                className="w-1/2 neo-btn bg-rose-500 hover:bg-rose-600 text-white py-2.5 text-xs font-black cursor-pointer"
+                className="w-1/2 py-2.5 px-3 bg-[var(--color-danger)] hover:bg-rose-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-xs transition-colors"
               >
                 Hapus
               </button>
