@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root {
+  /* Design Tokens for Light Mode */
+  --color-bg: #FDF6EC;          /* warm off-white */
+  --color-surface: #FFFFFF;
+  --color-text: #171717;
+  --color-border: #171717;
+
+  /* Accent colors */
+  --color-income: #4ADE80;      /* Emerald */
+  --color-expense: #FB7185;     /* Rose */
+  --color-saving: #60A5FA;      /* Sky Blue */
+  --color-accent: #FACC15;      /* Yellow Gold */
+  --color-danger: #EF4444;      /* Red */
+
+  /* Neobrutalism properties */
+  --border-width: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* Custom timing curves */
+  --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  transition: background-color 250ms ease, color 250ms ease;
+  overflow-x: hidden;
+}
+
+/* Custom Neobrutalism Classes */
+.neo-border {
+  border: var(--border-width) solid var(--color-border);
+}
+
+.neo-shadow-sm {
+  box-shadow: 2px 2px 0px var(--color-border);
+}
+
+.neo-shadow-md {
+  box-shadow: 4px 4px 0px var(--color-border);
+}
+
+.neo-shadow-lg {
+  box-shadow: 6px 6px 0px var(--color-border);
+}
+
+/* Base Card Style */
+.neo-card {
+  background-color: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 4px 4px 0px var(--color-border);
+  transition: transform 150ms var(--ease-snap), box-shadow 150ms var(--ease-snap);
+}
+
+.neo-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px var(--color-border);
+}
+
+/* Interactive Clicky Button Style */
+.neo-btn {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 4px 4px 0px var(--color-border);
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 100ms var(--ease-snap), box-shadow 100ms var(--ease-snap), background-color 150ms ease;
+}
+
+.neo-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px var(--color-border);
+}
+
+.neo-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0px var(--color-border);
+}
+
+.neo-btn-accent {
+  background-color: var(--color-accent);
+}
+
+.neo-btn-income {
+  background-color: var(--color-income);
+}
+
+.neo-btn-expense {
+  background-color: var(--color-expense);
+}
+
+.neo-btn-saving {
+  background-color: var(--color-saving);
+}
+
+/* Heatmap transitions */
+.heatmap-cell {
+  transition: transform 150ms var(--ease-snap), filter 150ms ease;
+}
+.heatmap-cell:hover {
+  transform: scale(1.25);
+  z-index: 10;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+/* Animations */
+@keyframes pulse-flame {
+  0%, 100% {
+    transform: scale(1) rotate(-2deg);
+    filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.4));
+  }
+  50% {
+    transform: scale(1.15) rotate(2deg);
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
+  }
+}
+
+.animate-flame {
+  animation: pulse-flame 1.5s infinite ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out 2;
+}
+
+/* Confetti sparkles */
+.sparkle {
+  position: absolute;
+  pointer-events: none;
+  animation: sparkle-anim 0.8s ease-out forwards;
+}
+
+@keyframes sparkle-anim {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0) rotate(360deg);
+    opacity: 0;
+  }
+}

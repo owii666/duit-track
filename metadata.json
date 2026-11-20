@@ -1,0 +1,6 @@
+{
+  "name": "Daptrack",
+  "description": "A minimalist neobrutalism personal finance tracker with local IndexedDB storage, daily streaks, quick transaction additions, and custom charts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
