@@ -1,4 +1,4 @@
-# Duittrack - Aplikasi Manajemen Keuangan Pribadi (PWA)
+# Duittrack Aplikasi Manajemen Keuangan Pribadi (PWA)
 
 **Duittrack** adalah aplikasi web pencatat dan pengelola keuangan pribadi modern dengan antarmuka bersih (*clean e-wallet UI*), sistem gamifikasi disiplin harian (*daily streak*), pelacak target impian (*savings goals*), budgeting bulanan, serta analisis arus kas interaktif.
 
@@ -104,23 +104,6 @@ http://localhost:3000
 
 ---
 
-## Panduan Deployment ke Vercel
-
-Proyek ini telah dikonfigurasi secara optimal untuk deployment instan ke **Vercel**:
-
-1. Unggah (*push*) repositori Anda ke GitHub.
-2. Buka dashboard [Vercel](https://vercel.com/) dan klik **"Add New..." > "Project"**.
-3. Pilih repository GitHub Anda dan klik **"Import"**.
-4. Vercel akan otomatis mengenali konfigurasi berikut:
-   - **Framework Preset**: `Vite`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-   - **Install Command**: `npm install`
-5. Klik **"Deploy"**. Dalam waktu kurang dari 1 menit, website Anda sudah aktif secara global dengan HTTPS gratis.
-
-> File `vercel.json` sudah disediakan di root folder untuk menangani routing SPA (*rewrite rule*) agar tidak terjadi error 404 saat pengguna me-refresh halaman.
-
----
 
 ## Struktur Direktori Proyek
 
